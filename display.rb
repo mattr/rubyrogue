@@ -6,6 +6,9 @@
 require 'gosu'
 
 class Interface
+	def initialize(tileset)
+		@tileset=tileset
+	end
 	# draw a rectangular frame
 	def frame(x,y,width,height,type=:double,color=0xFFFFFFFF)
 		case type
@@ -20,11 +23,11 @@ class Interface
 		@tileset[tiles[:topright]].draw((x+width-1)*16,y*16,0,1,1,color)
 		@tileset[tiles[:bottomright]].draw((x+width-1)*16,(y+height-1)*16,0,1,1,color)
 		@tileset[tiles[:bottomleft]].draw(x*16,(y+height-1)*16,0,1,1,color)
-		(width-1).times do |i| #draw horizontal borders; since width is a total, we substract 1
+		(width-2).times do |i| #draw horizontal borders; since width is a total, we substract 1
 			@tileset[tiles[:horizontal]].draw((x+i+1)*16,y*16,0,1,1,color)
 			@tileset[tiles[:horizontal]].draw((x+i+1)*16,(y+height-1)*16,0,1,1,color)
 			end
-		(height-1).times do |j| #draw vertical borders
+		(height-2).times do |j| #draw vertical borders
 			@tileset[tiles[:vertical]].draw(x*16,(y+1+j)*16,0,1,1,color)
 			@tileset[tiles[:vertical]].draw((x+width-1)*16,(y+1+j)*16,0,1,1,color)
 			end

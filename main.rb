@@ -13,9 +13,10 @@ class GameWindow < Gosu::Window
 #    z=ini['Display']['Fullscreen']
 #    super(x.to_i,y.to_i,z.to_i)
   def initialize
-    super(1024,768,0)
+    super(800,600,0)
     self.caption="Generic title"
     @tileset=Tileset.new(self)
+    @interface=Interface.new(@tileset)
   end
   
   def update()
@@ -23,7 +24,7 @@ class GameWindow < Gosu::Window
   end
   
   def draw()
-	  Interface.frame(0,0,5,5,:solid,0xFF00FFFF)
+	  @interface.frame(0,0,width/16,height/16,:solid,0xFF888888) #this draws a neat border along screen edges
   end
 end
 
