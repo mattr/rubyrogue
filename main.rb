@@ -1,6 +1,6 @@
 require 'gosu'
-#require 'keyboard'
-#require 'display'
+require 'keyboard'
+require 'display'
 require 'tileset'
 require 'cut' # various snippets such as the new rand()
 
@@ -22,8 +22,8 @@ class GameWindow < Gosu::Window
 
   end
   
-  def draw()    
-    16.times {|j| 16.times {|i| @tileset[Tileset::SYMBOLS[i+j*16]].draw(i*16,j*16,0)}}
+  def draw()
+	  Interface.frame(0,0,5,5,:solid,0xFF00FFFF)
   end
 end
 
