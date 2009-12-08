@@ -11,11 +11,13 @@ class GameWindow < Gosu::Window
 #    y=ini['Display']['DisplayY']
 #    z=ini['Display']['Fullscreen']
 #    super(x.to_i,y.to_i,z.to_i)
+  
+  include Interface
+
   def initialize
     super(1024,768,0)
     self.caption="Generic title"
     @tileset=Tileset.new(self)
-    Interface.set_tileset(@tileset)
     @color=Gosu::Color.new(0xFFFFFFFF)
   end
   
@@ -26,12 +28,12 @@ class GameWindow < Gosu::Window
   end
   
   def draw()
-	  Interface.draw_frame(0,0,width/32,height/16,:double,0xFF00FFFF)
-	  Interface.draw_frame(32,0,32,10,:single,0xFFFFFFFF)
-	  Interface.draw_frame(32,10,32,10,:solid,0xFF0000FF)
-	  Interface.draw_frame(32,20,32,10,:heart,0xFFFF0000)
-	  Interface.draw_tiles(33,11,[:H,:e,:l,:l,:o,:space,:w,:o,:r,:l,:d],:horizontal,0xFFCCCCCC)
-	  Interface.draw_tiles(33,31,[:H,:e,:l,:l,:o,:space,:w,:o,:r,:l,:d],:vertical,@color)
+	  draw_frame(0,0,width/32,height/16,:double,0xFF00FFFF)
+	  draw_frame(32,0,32,10,:single,0xFFFFFFFF)
+	  draw_frame(32,10,32,10,:solid,0xFF0000FF)
+	  draw_frame(32,20,32,10,:heart,0xFFFF0000)
+	  draw_tiles(33,11,[:H,:e,:l,:l,:o,:space,:w,:o,:r,:l,:d],:horizontal,0xFFCCCCCC)
+	  draw_tiles(33,31,[:H,:e,:l,:l,:o,:space,:w,:o,:r,:l,:d],:vertical,@color)
   end
 end
 

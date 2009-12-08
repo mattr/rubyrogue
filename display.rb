@@ -5,25 +5,21 @@
 # 
 require 'gosu'
 
-class Interface
-	def Interface.set_tileset(tileset)
-		@@tileset=tileset
-	end
-	
-	def Interface.draw_tiles(x,y,content,direction=:horizontal,color=0xFFFFFFFF)
+module Interface
+	def draw_tiles(x,y,content,direction=:horizontal,color=0xFFFFFFFF)
 		#expected argument must be either a Symbol or an Array of symbols
 		# Draws either the one tile or a number of tiles into given direction
 		if content.class==Symbol then
-			@@tileset[content].draw(x*16,y*16,0,1,1,color)
+			@tileset[content].draw(x*16,y*16,0,1,1,color)
 		elsif content.class==Array and direction==:horizontal then
-			content.length.times {|i| @@tileset[content[i]].draw((x+i)*16,y*16,0,1,1,color)}
+			content.length.times {|i| @tileset[content[i]].draw((x+i)*16,y*16,0,1,1,color)}
 		elsif content.class==Array and direction==:vertical then
-			content.length.times {|j| @@tileset[content[j]].draw(x*16,(y+j)*16,0,1,1,color)}
+			content.length.times {|j| @tileset[content[j]].draw(x*16,(y+j)*16,0,1,1,color)}
 		end
 	end
 	
 	# draw a rectangular frame
-	def Interface.draw_frame(x,y,width,height,type=:double,color=0xFFFFFFFF)
+	def draw_frame(x,y,width,height,type=:double,color=0xFFFFFFFF)
 		case type
 			when :double then
 				tiles={:topleft => :table_topleft_double, :topright => :table_topright_double, :bottomright => :table_bottomright_double, :bottomleft => :table_bottomleft_double, :horizontal => :table_horizontal_double, :vertical => :table_vertical_double}
