@@ -35,45 +35,45 @@ class Tileset < Gosu::Image
     :triangle_up, # up triangle
     :triangle_down, #down triangle
 
-    :space, #empty
-    :exclamation, # !
-    :quotes, # "
-    :hash, # #
-    :dollar, # $
-    :percent, # %
-    :ampersand, # &
-    :quote, # '
-    :open_parenthesis, # (
-    :close_parenthesis, # )
-    :star, # *
-    :plus, # +
-    :comma, # ,
-    :minus, # -
-    :period, # .
-    :slash, # /
+    :" ", #empty
+    :"!", # !
+    :'"', # "
+    :"#", # #
+    :"$", # $
+    :"%", # %
+    :"&", # &
+    :"'", # '
+    :"(", # (
+    :")", # )
+    :"*", # *
+    :"+", # +
+    :",", # ,
+    :"-", # -
+    :".", # .
+    :"/", # /
     
-    :zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine, # 0123456789
-    :colon, # :
-    :semicolon, # ;
-    :less, # <
-    :equal, # =
-    :more, # >
-    :question, # ?
+    :"0", :"1", :"2", :"3", :"4", :"5", :"6", :"7", :"8", :"9", # 0123456789
+    :":", # :
+    :";", # ;
+    :"<", # <s
+    :"=", # =
+    :">", # >
+    :"?", # ?
 
-    :at, # @
+    :"@", # @
     :A, :B, :C, :D, :E, :F, :G, :H, :I, :J, :K, :L, :M, :N, :O, :P, :Q, :R, :S, :T, :U, :V, :W, :X, :Y, :Z,
-    :open_bracket, # [
-    :backslash, # \
-    :close_bracket, # ]
-    :caret, # ^
-    :underscore, # _
+    :"[", # [
+    :"\\", # \
+    :"]", # ]
+    :"^", # ^
+    :"_", # _
 
-    :backquote, # `
+    :"`", # `
     :a, :b, :c, :d, :e, :f, :g, :h, :i, :j, :k, :l, :m, :n, :o, :p, :q, :r, :s, :t, :u, :v, :w, :x, :y, :z,
-    :open_curly, # {
-    :pipe, # |
-    :close_curly, # }
-    :tilde, # ~
+    :"{", # {
+    :"|", # |
+    :"}", # }
+    :"~", # ~
     :house, # semi-triangle thing
 # accents
     :C_cedilla,
