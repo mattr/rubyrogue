@@ -22,25 +22,28 @@ class GameWindow < Gosu::Window
     @tileset=Tileset.new(self)
     @color=Gosu::Color.new(255,255,0,0)
     @benchmark=Gosu::milliseconds()
+    @buffer=[]
+	64.times do |i|
+		@buffer << []
+		48.times do |j|
+			@buffer[i][j]=[Tileset::SYMBOLS[rand(256)], Interface::COLORS.values[rand(Interface::COLORS.keys.length)]]
+		end
+	end
   end
   
   def update()
   end
   
   def draw()
-	  #draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
-	  #draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
-	  # Z order: Background, Base, Foreground, Overlay
-	  draw_tiles(0,0,Base,"Keyboard Test: ", 0xFFFFFFCC, :horizontal)
-	  string="0123456789012345678901234567890123456789012345678901234567890124"
-	  start = Gosu::milliseconds()
-	  47.times do |j| 
-		  draw_tiles(0,j+1,Base,string)
-		 # string.length.times do |i| 
-		#	draw_tiles(i,j+1,Base,string[i],Gosu::Color.new((255*(1-i.to_f/(string.length-1))).to_i, (255*(i.to_f/(string.length-1))).to_i, 0))
-		end
-	delta = Gosu::milliseconds()-start
-	self.caption=delta
+	start = Gosu::milliseconds() #benchmark start
+	#draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
+	#draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
+	# Z order: Background, Base, Foreground, Overlay
+	draw_frame(0,0,64,26,Foreground,0xFF999999,:single)
+	draw_buffer(1,1,62,24,@buffer)
+	draw_tiles(1,26,Base,"draw_buffer test",0xFFFFFFAA)
+	delta = Gosu::milliseconds()-start #benchmark end
+	self.caption=delta.to_s+" ms"
   end
 end
 

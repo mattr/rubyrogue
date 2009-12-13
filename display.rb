@@ -5,7 +5,20 @@
 # 
 require 'gosu'
 
+
+
 module Interface
+
+COLORS={
+	:white => 0xFFFFFFFF,
+	:red => 0xFFFF0000,
+	:green => 0xFF00FF00,
+	:blue => 0xFF0000FF,
+	:yellow => 0xFFFFFF00,
+	:purple => 0xFFFF00FF,
+	:cyan => 0xFF00FFFF,
+	:gray => 0xFFAAAAAA
+}
 	def draw_tiles(x,y,z_order,content,color=0xFFFFFFFF,direction=:horizontal)
 		#expected argument must be either a Symbol or an Array of symbols
 		# Draws either the one tile or a number of tiles into given direction
@@ -21,8 +34,13 @@ module Interface
 		end
 	end
 	
-	def draw_buffer(x,y,width,height,z_order)
-		# eventually this would draw the buffer where game data is dumped for drawing
+	def draw_buffer(x,y,width,height,buffer)
+		#draw the array contents
+		height.times do |j|
+			width.times do |i|
+				draw_tiles(x+i,y+j,0,buffer[i][j][0],buffer[i][j][1])
+			end
+		end
 	end
 	
 	# draw a rectangular frame
