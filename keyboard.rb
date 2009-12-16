@@ -60,10 +60,7 @@ class Input
     :home => [Gosu::KbHome],
     :ins => [Gosu::KbInsert],
     :left => [Gosu::KbLeft],
-    :alt => [Gosu::KbLeftAlt],
-    :ctrl => [Gosu::KbLeftControl],
-    :shift => [Gosu::KbLeftShift],
-    :plus => [Gosu::KbNumpadAdd],
+    :plus => [Gosu::KbNumpadAdd,13],
     :divide => [Gosu::KbNumpadDivide],
     :multiply => [Gosu::KbNumpadMultiply],
     :minus => [Gosu::KbNumpadSubtract],
@@ -71,9 +68,6 @@ class Input
     :pageup => [Gosu::KbPageUp],
     :enter => [Gosu::KbReturn],
     :right => [Gosu::KbRight],
-    :alt => [Gosu::KbRightAlt],
-    :ctrl => [Gosu::KbRightControl],
-    :shift => [Gosu::KbRightShift],
     :space => [Gosu::KbSpace],
     :tab => [Gosu::KbTab],
     :up => [Gosu::KbUp],
@@ -82,6 +76,9 @@ class Input
     :click_right => [Gosu::MsRight],
     :wheel_down => [Gosu::MsWheelDown],
     :wheel_up => [Gosu::MsWheelUp],
+    :alt => [Gosu::KbRightAlt, Gosu::KbLeftAlt],
+    :ctrl => [Gosu::KbRightControl, Gosu::KbLeftControl],
+    :shift => [Gosu::KbRightShift, Gosu::KbLeftShift]
   }
 	
 	def initialize
