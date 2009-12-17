@@ -3,9 +3,9 @@ require 'display'
 include Interface
 
 # This class is responsible for reading pressed keys and tracking them
-class Input
+module Input
 	attr_accessor :keys
-	KEYS={
+	KEYS = {
     :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
     :'1' => [Gosu::Kb1, Gosu::KbNumpad1],
     :'2' => [Gosu::Kb2, Gosu::KbNumpad2],
@@ -83,11 +83,9 @@ class Input
     :ctrl => [Gosu::KbRightControl, Gosu::KbLeftControl],
     :shift => [Gosu::KbRightShift, Gosu::KbLeftShift]
   }
-  	def initialize
-		@keys=Hash.new
-	end
+  @keys = {}
 	
-  def read(window)
+  def self.read(window)
     KEYS.each do |symbol, keys|
       is_pressed = keys.inject(false){|pressed, key| window.button_down?(key) or pressed}
       if is_pressed then
@@ -97,7 +95,7 @@ class Input
         @keys.delete(symbol)
       end
     end
-    return @keys
+    return @keys # this line is actually redundant, but it won't hurt to leave it here
   end
 end
 
@@ -112,12 +110,12 @@ class TextInput
 		@cursor=x+text.length
 	end
 	
-	def edit
-		if Game::keys.keys.include?(:esc) then return [:cancel,@default]
-		elsif Game::keys.keys.include?(:enter) then return [:ok,@content.join]
+	def edit(keys)
+		if keys.include?(:esc) then return [:cancel,@default]
+		elsif keys.include?(:enter) then return [:ok,@content.join]
 		else 
-			if Game::keys.keys.include?(:left) and @cursor>@x then @cursor-=1
-			elsif Game::keys.keys.include?(:right) and @cursor<(@x+@content.length) then @cursor+=1
+			if keys.include?(:left) and @cursor>@x then @cursor-=1
+			elsif keys.include?(:right) and @cursor<(@x+@content.length) then @cursor+=1
 			else
 				#actual editing code
 			end

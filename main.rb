@@ -29,39 +29,39 @@ class GameWindow < Gosu::Window
   include Math
 
   def initialize
-	super(1024,768,0)
-	self.caption="Generic title"
-	@tileset=Tileset.new(self)
-	Interface::tileset=@tileset
-	@color=Gosu::Color.new(255,255,0,0)
-	@benchmark=Gosu::milliseconds()
-	@buffer=[]
-	64.times do |i|
-		@buffer << []
-		48.times do |j|
-			@buffer[i][j]=[Tileset::SYMBOLS[rand(256)], COLORS.values[rand(COLORS.keys.length)]]
-		end
-	end
-	@keys=Input.new # hash to store key presses
-
+    super(1024, 768, 0)
+    self.caption="Generic title"
+    @tileset=Tileset.new(self)
+    Interface::tileset=@tileset
+    @color=Gosu::Color.new(255, 255, 0, 0)
+    @benchmark=Gosu::milliseconds()
+    @buffer=[]
+    64.times do |i|
+      @buffer << []
+      48.times do |j|
+        @buffer[i][j]=[Tileset::SYMBOLS[rand(256)], COLORS.values[rand(COLORS.keys.length)]]
+      end
+    end
+    @keys = Input::read(self) # hash to store key presses
   end
   
   def update()
-	@keys.read(self)
-	if @keys.keys.include?(:N) and not @test then 
-		@test=TextInput.new(1,28,'Default text')
-	end
-	if @test then
-		if @test.edit[0]==:ok then
-			puts @test.edit[1]
-			@test=nil
-		elsif @test.edit[0]==:cancel then
-			puts @test.edit[1]
-			@test=nil
-		else
-			#nothing
-		end
-	end
+    Input::read(self) # the trick is that once GameWindow::keys refers to Input::keys, there's no need to set GameWindow::keys every tick
+    if @keys.keys.include?(:N) and not @test then 
+      @test=TextInput.new(1, 28, 'Default text')
+    end
+    if @test then
+      ed = @test.edit(@keys)
+      if ed[0] == :ok then
+        puts ed[1]
+        @test=nil
+      elsif ed[0] == :cancel then
+        puts ed[1]
+        @test=nil
+      else
+        #nothing
+      end
+    end
   end
   
   def draw()
@@ -71,12 +71,12 @@ class GameWindow < Gosu::Window
 	#draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
 	# Z order: Background, Base, Foreground, Overlay
 	
-	draw_frame(0,0,64,26,Foreground,0xFF999999,:single)
-	draw_buffer(1,1,62,24,@buffer)
-	draw_tiles(1,26,Base,"TextInput test, press",0xFFFFFFAA)
-	draw_tiles(22,26,Base," n ",0xFF00FFFF)
-	draw_tiles(25,26,Base,"to begin typing.",0xFFFFFFAA)
-	draw_tiles(1,47,Base,@keys.keys,0xFFFFFFFF)
+	draw_frame(0, 0, 64, 26, Foreground, 0xFF999999, :single)
+	draw_buffer(1, 1, 62, 24, @buffer)
+	draw_tiles(1, 26, Base,"TextInput test, press", 0xFFFFFFAA)
+	draw_tiles(22, 26, Base," n ",0xFF00FFFF)
+	draw_tiles(25, 26, Base,"to begin typing.", 0xFFFFFFAA)
+	draw_tiles(1, 47, Base, @keys , 0xFFFFFFFF)
 	if @test then @test.draw end
 
 	delta = Gosu::milliseconds()-start #benchmark end
