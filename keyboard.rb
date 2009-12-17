@@ -4,7 +4,7 @@ include Interface
 
 # This class is responsible for reading pressed keys and tracking them
 module Input
-	attr_accessor :keys
+	class << self; attr_accessor :keys end
 	KEYS = {
     :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
     :'1' => [Gosu::Kb1, Gosu::KbNumpad1],
@@ -101,23 +101,39 @@ end
 
 	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
 class TextInput
-	def initialize(x,y,text='',length=10)
+	def initialize(x,y,text='',length=20)
 		@default=text
 		@x = x
 		@y = y
 		@content=text.split('').collect{|s| s.intern}
 		@limit=length
-		@cursor=x+text.length
+		@cursor=text.length
+		@alphabet=('A'..'Z').to_a.collect{|s| s.intern}
 	end
 	
 	def edit(keys)
 		if keys.include?(:esc) then return [:cancel,@default]
 		elsif keys.include?(:enter) then return [:ok,@content.join]
 		else 
-			if keys.include?(:left) and @cursor>@x then @cursor-=1
-			elsif keys.include?(:right) and @cursor<(@x+@content.length) then @cursor+=1
+			if keys.include?(:left) and (@cursor)>0 then @cursor-=1
+			elsif keys.include?(:right) and @cursor<@content.length and @cursor<@limit then @cursor+=1
+			elsif keys.include?(:delete) then @content.delete_at(@cursor)
+			elsif keys.include?(:backspace) and not @content.empty? then 
+				@content.delete_at(@cursor-1)
+				if @cursor>0 then @cursor-=1 end
 			else
-				#actual editing code
+				@alphabet.each {|letter| 
+					if keys.include?(letter) then 
+						if @cursor<@content.length and @content.length<@limit then 
+							@content.insert(@cursor,letter)
+							@cursor+=1
+						elsif @content.length<@limit then 
+							@content << letter
+							@cursor+=1
+						else
+							@content[@cursor]=letter
+						end
+					end }
 			end
 			return [:pending]
 		end		
@@ -125,7 +141,7 @@ class TextInput
 	
 	def draw
 		if (not @content.empty?) then Interface::draw_tiles(@x,@y,0,@content) end
-		if (Gosu::milliseconds()%500>250) then Interface::draw_tiles(@cursor,@y,1,:fill100,0x88FFFF00) end
+		if (Gosu::milliseconds()%500>250) then Interface::draw_tiles(@x+@cursor,@y,1,:fill100,0x88FFFF00) end
 	end
 	
 end

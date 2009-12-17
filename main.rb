@@ -34,7 +34,6 @@ class GameWindow < Gosu::Window
     @tileset=Tileset.new(self)
     Interface::tileset=@tileset
     @color=Gosu::Color.new(255, 255, 0, 0)
-    @benchmark=Gosu::milliseconds()
     @buffer=[]
     64.times do |i|
       @buffer << []
@@ -43,12 +42,15 @@ class GameWindow < Gosu::Window
       end
     end
     @keys = Input::read(self) # hash to store key presses
+    @update_time=0
   end
   
   def update()
+    start = Gosu::milliseconds() #benchmark start
+    
     Input::read(self) # the trick is that once GameWindow::keys refers to Input::keys, there's no need to set GameWindow::keys every tick
     if @keys.keys.include?(:N) and not @test then 
-      @test=TextInput.new(1, 28, 'Default text')
+      @test=TextInput.new(1, 27, 'Default text')
     end
     if @test then
       ed = @test.edit(@keys)
@@ -62,6 +64,8 @@ class GameWindow < Gosu::Window
         #nothing
       end
     end
+     
+    @update_time=Gosu::milliseconds()-start #benchmark end
   end
   
   def draw()
@@ -79,8 +83,8 @@ class GameWindow < Gosu::Window
 	draw_tiles(1, 47, Base, @keys , 0xFFFFFFFF)
 	if @test then @test.draw end
 
-	delta = Gosu::milliseconds()-start #benchmark end
-	self.caption=delta.to_s+" ms"
+	update_draw = Gosu::milliseconds()-start #benchmark end
+	self.caption=(@update_time+update_draw).to_s+" ms"
   end
 end
 
