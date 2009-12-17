@@ -5,10 +5,9 @@
 # 
 require 'gosu'
 
-
-
 module Interface
-
+	class << self; attr_writer :tileset end
+	
 	def draw_tiles(x,y,z_order,content,color=0xFFFFFFFF,direction=:horizontal)
 		#expected argument must be either a Symbol or an Array of symbols
 		# Draws either the one tile or a number of tiles into given direction

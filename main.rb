@@ -31,6 +31,7 @@ class GameWindow < Gosu::Window
 	super(1024,768,0)
 	self.caption="Generic title"
 	@tileset=Tileset.new(self)
+	Interface::tileset=@tileset
 	@color=Gosu::Color.new(255,255,0,0)
 	@benchmark=Gosu::milliseconds()
 	@buffer=[]
@@ -41,10 +42,14 @@ class GameWindow < Gosu::Window
 		end
 	end
 	@keys=Input.new # hash to store key presses
+	@test=TextInput.new(1,28,'Test')
+
   end
   
   def update()
-	  @keys.read(self)
+	@keys.read(self)
+	puts @test.edit
+	
   end
   
   def draw()
@@ -58,7 +63,8 @@ class GameWindow < Gosu::Window
 	draw_buffer(1,1,62,24,@buffer)
 	draw_tiles(1,26,Base,"draw_buffer test",0xFFFFFFAA)
 	draw_tiles(1,27,Base,@keys.inspect,0xFFFFFFFF)
-	
+	@test.draw
+
 	delta = Gosu::milliseconds()-start #benchmark end
 	self.caption=delta.to_s+" ms"
   end

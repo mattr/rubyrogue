@@ -1,8 +1,11 @@
 require 'gosu'
+require 'display'
+include Interface
 
-# Handle keyboard input
+# This class is responsible for reading pressed keys and tracking them
 class Input
-  KEYS={
+	attr_accessor :keys
+	KEYS={
     :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
     :'1' => [Gosu::Kb1, Gosu::KbNumpad1],
     :'2' => [Gosu::Kb2, Gosu::KbNumpad2],
@@ -80,8 +83,7 @@ class Input
     :ctrl => [Gosu::KbRightControl, Gosu::KbLeftControl],
     :shift => [Gosu::KbRightShift, Gosu::KbLeftShift]
   }
-	
-	def initialize
+  	def initialize
 		@keys=Hash.new
 	end
 	
@@ -97,4 +99,34 @@ class Input
     end
     return @keys
   end
+end
+
+	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
+class TextInput
+	def initialize(x,y,text='',length=10)
+		@x = x
+		@y = y
+		@content=text.split('').collect{|s| s.intern}
+		@limit=length
+		@cursor=x+text.length
+	end
+	
+	def edit
+		if Input::keys.include?(:esc) then return [:cancel,text]
+		elsif Input::keys.include?(:enter) then return [:ok,@content.join]
+		else 
+			if Input::keys.include?(:left) and @cursor>@x then @cursor-=1
+			elsif Input::keys.include?(:right) and @cursor<(@x+@content.length) then @cursor+=1
+			else
+				#actual editing code
+			end
+			return [:pending]
+		end		
+	end
+	
+	def draw
+		if (not @content.empty?) then Interface::draw_tiles(@x,@y,0,@content) end
+		if (Gosu::milliseconds()%500>250) then Interface::draw_tiles(@cursor,@y,1,:fill100,0x88FFFF00) end
+	end
+	
 end
