@@ -16,6 +16,7 @@ COLORS={
 }
 
 class GameWindow < Gosu::Window
+	attr_accessor :keys
 	Background, Base, Foreground, Overlay = *0..3 # Z levels
 # advanced initialization, not really needed now
 #  def initialize(ini)
@@ -42,14 +43,25 @@ class GameWindow < Gosu::Window
 		end
 	end
 	@keys=Input.new # hash to store key presses
-	@test=TextInput.new(1,28,'Test')
 
   end
   
   def update()
 	@keys.read(self)
-	puts @test.edit
-	
+	if @keys.keys.include?(:N) and not @test then 
+		@test=TextInput.new(1,28,'Default text')
+	end
+	if @test then
+		if @test.edit[0]==:ok then
+			puts @test.edit[1]
+			@test=nil
+		elsif @test.edit[0]==:cancel then
+			puts @test.edit[1]
+			@test=nil
+		else
+			#nothing
+		end
+	end
   end
   
   def draw()
@@ -61,9 +73,11 @@ class GameWindow < Gosu::Window
 	
 	draw_frame(0,0,64,26,Foreground,0xFF999999,:single)
 	draw_buffer(1,1,62,24,@buffer)
-	draw_tiles(1,26,Base,"draw_buffer test",0xFFFFFFAA)
-	draw_tiles(1,27,Base,@keys.inspect,0xFFFFFFFF)
-	@test.draw
+	draw_tiles(1,26,Base,"TextInput test, press",0xFFFFFFAA)
+	draw_tiles(22,26,Base," n ",0xFF00FFFF)
+	draw_tiles(25,26,Base,"to begin typing.",0xFFFFFFAA)
+	draw_tiles(1,47,Base,@keys.keys,0xFFFFFFFF)
+	if @test then @test.draw end
 
 	delta = Gosu::milliseconds()-start #benchmark end
 	self.caption=delta.to_s+" ms"

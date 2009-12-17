@@ -104,6 +104,7 @@ end
 	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
 class TextInput
 	def initialize(x,y,text='',length=10)
+		@default=text
 		@x = x
 		@y = y
 		@content=text.split('').collect{|s| s.intern}
@@ -112,11 +113,11 @@ class TextInput
 	end
 	
 	def edit
-		if Input::keys.include?(:esc) then return [:cancel,text]
-		elsif Input::keys.include?(:enter) then return [:ok,@content.join]
+		if Game::keys.keys.include?(:esc) then return [:cancel,@default]
+		elsif Game::keys.keys.include?(:enter) then return [:ok,@content.join]
 		else 
-			if Input::keys.include?(:left) and @cursor>@x then @cursor-=1
-			elsif Input::keys.include?(:right) and @cursor<(@x+@content.length) then @cursor+=1
+			if Game::keys.keys.include?(:left) and @cursor>@x then @cursor-=1
+			elsif Game::keys.keys.include?(:right) and @cursor<(@x+@content.length) then @cursor+=1
 			else
 				#actual editing code
 			end
