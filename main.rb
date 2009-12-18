@@ -16,8 +16,9 @@ COLORS={
 }
 
 class GameWindow < Gosu::Window
-	attr_accessor :keys
+	attr_accessor :keys, :WIDTH, :HEIGHT
 	Background, Base, Foreground, Overlay = *0..3 # Z levels
+	WIDTH, HEIGHT = 64, 48 # width and height in tiles, based on 1024x768 with 16x16 tiles
 # advanced initialization, not really needed now
 #  def initialize(ini)
 #    x=ini['Display']['DisplayX']
@@ -41,21 +42,22 @@ class GameWindow < Gosu::Window
         @buffer[i][j]=[Tileset::SYMBOLS[rand(256)], COLORS.values[rand(COLORS.keys.length)]]
       end
     end
-    @keys = Input::read(self) # hash to store key presses
     @update_time=0
+    @keys=Input::active
   end
   
   def update()
     start = Gosu::milliseconds() #benchmark start
     
     Input::read(self) # the trick is that once GameWindow::keys refers to Input::keys, there's no need to set GameWindow::keys every tick
-    if @keys.keys.include?(:N) and not @test then 
-      @test=TextInput.new(1, 27, 'Default text')
+
+    if Input::triggered?(:N) and not @test then 
+	@test=TextInput.new(1, 27, 'Default text')
     end
     if @test then
-      ed = @test.edit(@keys)
+	ed = @test.edit
       if ed[0] == :ok then
-        puts ed[1]
+	puts ed[1]
         @test=nil
       elsif ed[0] == :cancel then
         puts ed[1]
@@ -80,7 +82,8 @@ class GameWindow < Gosu::Window
 	draw_tiles(1, 26, Base,"TextInput test, press", 0xFFFFFFAA)
 	draw_tiles(22, 26, Base," n ",0xFF00FFFF)
 	draw_tiles(25, 26, Base,"to begin typing.", 0xFFFFFFAA)
-	draw_tiles(1, 47, Base, @keys , 0xFFFFFFFF)
+	draw_tiles(1, 46, Base, @keys.inspect.to_s , 0xFFFFFFFF) #bugs
+	draw_tiles(1,47,Base,Input::triggered*",",0xFFCCCCCC) #bugs
 	if @test then @test.draw end
 
 	update_draw = Gosu::milliseconds()-start #benchmark end

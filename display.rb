@@ -17,9 +17,10 @@ module Interface
 			content.length.times {|i| @tileset[content[i]].draw((x+i)*16,y*16,z_order,1,1,color)}
 		elsif content.class==Array and direction==:vertical then
 			content.length.times {|j| @tileset[content[j]].draw(x*16,(y+j)*16,z_order,1,1,color)}
-		else 
+		elsif content.class==String or content.class==Bignum or content.class==Fixnum then
 			string=content.to_s.split('').collect! {|s| s.intern}
 			string.length.times {|i| @tileset[string[i]].draw((x+i)*16,y*16,z_order,1,1,color)}
+		else puts 'Error: parameter not Symbol, Array, String or Number'
 		end
 	end
 	

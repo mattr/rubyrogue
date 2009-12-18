@@ -4,8 +4,9 @@ include Interface
 
 # This class is responsible for reading pressed keys and tracking them
 module Input
-	class << self; attr_accessor :keys end
-	KEYS = {
+	class << self; attr_accessor :active, :triggered end
+	DELAY = 150 # milliseconds
+	ALL_KEYS = {
     :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
     :'1' => [Gosu::Kb1, Gosu::KbNumpad1],
     :'2' => [Gosu::Kb2, Gosu::KbNumpad2],
@@ -71,7 +72,7 @@ module Input
     :pageup => [Gosu::KbPageUp],
     :enter => [Gosu::KbReturn],
     :right => [Gosu::KbRight],
-    :space => [Gosu::KbSpace],
+    :' ' => [Gosu::KbSpace],
     :tab => [Gosu::KbTab],
     :up => [Gosu::KbUp],
     :click_left => [Gosu::MsLeft],
@@ -83,65 +84,100 @@ module Input
     :ctrl => [Gosu::KbRightControl, Gosu::KbLeftControl],
     :shift => [Gosu::KbRightShift, Gosu::KbLeftShift]
   }
-  @keys = {}
+  ALPHABET=('A'..'Z').to_a.collect{|s| s.intern}
+  NUMBERS=(0..9).to_a.collect{|n| n.to_s.intern}
+  ALPHANUMERIC=ALPHABET+NUMBERS+[:' ']
+    @active= {}
+    @triggered=[]
 	
-  def self.read(window)
-    KEYS.each do |symbol, keys|
-      is_pressed = keys.inject(false){|pressed, key| window.button_down?(key) or pressed}
-      if is_pressed then
-        @keys[symbol] ||= 0 # set to zero if it didn't exist, don't touch otherwise
-        @keys[symbol] += 1
-      else
-        @keys.delete(symbol)
-      end
-    end
-    return @keys # this line is actually redundant, but it won't hurt to leave it here
-  end
+	def self.read(window)
+	@triggered.clear
+	ALL_KEYS.each do |symbol, keys|
+		is_pressed = keys.inject(false){|pressed, key| window.button_down?(key) or pressed}
+		if is_pressed then
+			if @active[symbol] then
+				@active[symbol] += 1
+			else
+				@active[symbol] = 0
+				@triggered << symbol
+			end
+		else
+			@active.delete(symbol)
+		end
+		end
+	end
+
+	def self.triggered?(key)
+		@triggered.include?(key)
+	end
+	
+	def self.is_pressed?(key)
+		if (@active.include?(key) and @active[key]>=DELAY/15) or @triggered.include?(key) then
+			@active[key]=0
+			return true
+		else
+			return false
+		end
+	end
 end
 
 	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
 class TextInput
-	def initialize(x,y,text='',length=20)
+	def initialize(x,y,text='',length=64)
 		@default=text
 		@x = x
 		@y = y
 		@content=text.split('').collect{|s| s.intern}
 		@limit=length
 		@cursor=text.length
-		@alphabet=('A'..'Z').to_a.collect{|s| s.intern}
+
 	end
 	
-	def edit(keys)
-		if keys.include?(:esc) then return [:cancel,@default]
-		elsif keys.include?(:enter) then return [:ok,@content.join]
+	def edit
+		if Input.triggered?(:esc) then return [:cancel,@default]
+		elsif Input.triggered?(:enter) then return [:ok,@content.join]
 		else 
-			if keys.include?(:left) and (@cursor)>0 then @cursor-=1
-			elsif keys.include?(:right) and @cursor<@content.length and @cursor<@limit then @cursor+=1
-			elsif keys.include?(:delete) then @content.delete_at(@cursor)
-			elsif keys.include?(:backspace) and not @content.empty? then 
+			if Input.is_pressed?(:left) and (@cursor)>0 then @cursor-=1
+			elsif Input.is_pressed?(:right) and @cursor<@content.length and @cursor<@limit then @cursor+=1
+			elsif Input.is_pressed?(:delete) then @content.delete_at(@cursor)
+			elsif Input.is_pressed?(:backspace) and not @content.empty? then 
 				@content.delete_at(@cursor-1)
 				if @cursor>0 then @cursor-=1 end
 			else
-				@alphabet.each {|letter| 
-					if keys.include?(letter) then 
+				Input::ALPHANUMERIC.each {|letter| 
+					if Input.is_pressed?(letter) then 
 						if @cursor<@content.length and @content.length<@limit then 
-							@content.insert(@cursor,letter)
-							@cursor+=1
+							if Input::ALPHABET.include?(letter) then
+								if Input.active.include?(:shift) then @content.insert(@cursor,letter)
+								else @content.insert(@cursor,letter.to_s.downcase.intern) end
+							else
+								@content.insert(@cursor,letter)
+								@cursor+=1
+							end
 						elsif @content.length<@limit then 
-							@content << letter
+							if Input::ALPHABET.include?(letter) then
+								if Input.active.include?(:shift) then @content << letter
+								else @content << letter.to_s.downcase.intern end
+							else
+								@content << letter
+							end
 							@cursor+=1
 						else
-							@content[@cursor]=letter
+							if Input::ALPHABET.include?(letter) then
+								if Input.active.include?(:shift) then @content[@cursor]=letter
+								else @content[@cursor]=letter.to_s.downcase.intern end
+							else @content[@cursor]=letter
+							end
 						end
 					end }
 			end
-			return [:pending]
+			return [:pending,@content.join]
 		end		
 	end
 	
 	def draw
 		if (not @content.empty?) then Interface::draw_tiles(@x,@y,0,@content) end
-		if (Gosu::milliseconds()%500>250) then Interface::draw_tiles(@x+@cursor,@y,1,:fill100,0x88FFFF00) end
+		if (Gosu::milliseconds()%500>100) then Interface::draw_tiles(@x+@cursor,@y,1,:fill100,0x88FFFF00) end
 	end
 	
 end
