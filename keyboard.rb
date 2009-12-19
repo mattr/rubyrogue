@@ -112,7 +112,7 @@ module Input
 	end
 	
 	def self.is_pressed?(key)
-		if (@active.include?(key) and @active[key]>=DELAY/15) or @triggered.include?(key) then
+		if (@active.include?(key) and @active[key]>=60*DELAY/1000) or @triggered.include?(key) then
 			@active[key]=0
 			return true
 		else

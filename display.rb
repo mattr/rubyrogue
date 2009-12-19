@@ -17,18 +17,20 @@ module Interface
 			content.length.times {|i| @tileset[content[i]].draw((x+i)*16,y*16,z_order,1,1,color)}
 		elsif content.class==Array and direction==:vertical then
 			content.length.times {|j| @tileset[content[j]].draw(x*16,(y+j)*16,z_order,1,1,color)}
-		elsif content.class==String or content.class==Bignum or content.class==Fixnum then
-			string=content.to_s.split('').collect! {|s| s.intern}
-			string.length.times {|i| @tileset[string[i]].draw((x+i)*16,y*16,z_order,1,1,color)}
-		else puts 'Error: parameter not Symbol, Array, String or Number'
+		else puts 'Error: parameter not Symbol or Array of Symbols'
 		end
 	end
 	
-	def draw_buffer(x,y,width,height,buffer)
-		#draw the array contents
+	def draw_text(x,y,text,color=0xFFCCCCCC) # method for drawing strings and numbers
+		string=text.to_s.split('').collect! {|s| s.intern}
+		string.length.times {|i| @tileset[string[i]].draw((x+i)*16,y*16,1,1,1,color)}
+	end
+	
+	def draw_buffer(x,y,width,height,buffer,off_x=0,off_y=0)
+		#draw the array contents; use off_x and off_y to offset buffer coordinates (i.e. draw only a part of the buffer)
 		height.times do |j|
 			width.times do |i|
-				draw_tiles(x+i,y+j,0,buffer[i][j][0],buffer[i][j][1])
+				draw_tiles(x+i,y+j,0,buffer[i+off_x][j+off_y][0],buffer[i+off_x][j+off_y][1])
 			end
 		end
 	end
