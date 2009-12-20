@@ -3,6 +3,7 @@ require 'keyboard'
 require 'display'
 require 'tileset'
 require 'cut' # various snippets such as the new rand()
+require 'noise'
 
 COLORS={
 	:white => 0xFFFFFFFF,
@@ -28,6 +29,7 @@ class GameWindow < Gosu::Window
   
   include Interface
   include Math
+  include Noise
 
   def initialize
     super(1024, 768, 0)
@@ -35,56 +37,44 @@ class GameWindow < Gosu::Window
     @tileset=Tileset.new(self)
     Interface::tileset=@tileset
     @color=Gosu::Color.new(255, 255, 0, 0)
-    @buffer=[]
-    64.times do |i|
-      @buffer << []
-      48.times do |j|
-        @buffer[i][j]=[Tileset::SYMBOLS[rand(256)], COLORS.values[rand(COLORS.keys.length)]]
-      end
-    end
     @update_time=0
     @keys=Input::active
-    @cur_x=0
-    @cur_y=0
-    @state=:default
+    @buffer=Array.new(256){Array.new(256){[:fill100,0xFF333333]}}
+    @cursor_x=32
+    @cursor_y=24
   end
   
   def update()
-    start = Gosu::milliseconds() #benchmark start
-    
-    #this is just for a neat effect to test buffer display
-    4.times do @buffer[rand(64)][rand(48)]=[rand([:fill25,:fill50,:fill75,:fill100]),rand([0xFFFFFFFF,0xFFEEEEEE,0xFFDDDDDD,0xFFCCCCCC,0xFFBBBBBB,0xFFAAAAAA,0xFF999999,0xFF888888,0xFF777777,0xFF666666,0xFF555555,0xFF444444,0xFF333333,0xFF222222,0xFF111111,0xFF000000])] end
-    
-    Input::read(self) # the trick is that once GameWindow::keys refers to Input::keys, there's no need to set GameWindow::keys every tick
+	start = Gosu::milliseconds() #benchmark start
+	Input::read(self)
+	if Input.triggered?(:enter) then
+		
+		@noise=Noise.go(8)
+		256.times do |i|
+			256.times do|j|
+				if @noise[i][j]<=-0.5 then @buffer[i][j]=[rand([:double_tilde,:"~"]),0xFF3333FF] #deep ocean
+				elsif @noise[i][j]>-0.5 and @noise[i][j]<= -0.25 then @buffer[i][j]=[rand([:double_tilde,:"~"]),0xFF0077FF] #not so deep sea
+				elsif @noise[i][j]>-0.25 and @noise[i][j]<= 0.0 then @buffer[i][j]=[rand([:double_tilde,:"~"]),0xFF00AAFF] #shallow waters
+				elsif @noise[i][j]>0.0 and @noise[i][j]<= 0.1 then @buffer[i][j]=[:"~",0xFFCCCC00] #coastline (sand dunes)
+				elsif @noise[i][j]>0.1 and @noise[i][j]<= 0.25 then @buffer[i][j]=[rand([:",",:".",:";",:":"]),rand([0xFF00FF00,0xFF33BB33,0xFF66FF66,0xFF55FF00])] # lowland grass
+				elsif @noise[i][j]>0.25 and @noise[i][j]<= 0.50 then @buffer[i][j]=[rand([:",",:".",:";",:":",:spade,:club,:'"',:arrow_up]),rand([0xFF00FF00,0xFF33BB33,0xFF66FF66,0xFF55FF00,0xFFCCFF33])] # lowland grass
+				elsif @noise[i][j]>0.5 and @noise[i][j]<= 0.75 then @buffer[i][j]=[:triangle_up,rand([0xFFCCCC33,0xFF888800,0xFFAA5511])] #hills?
+				else @buffer[i][j]=[:triangle_up,rand([0xFF555555,0xFF333333,0xFF777777,0xFF999999,0xFFFFFFFF])]
+				end
+			end
+		end
+				
+	end
+	
+	if Input.is_pressed?(:left) and not Input.active.include?(:right) then @cursor_x-=1
+	elsif Input.is_pressed?(:right) and not Input.active.include?(:left) then @cursor_x+=1
+	else end
+	if Input.is_pressed?(:up) and not Input.active.include?(:down) then @cursor_y-=1
+	elsif Input.is_pressed?(:down) and not Input.active.include?(:up) then @cursor_y+=1
+	else end
 
-    if Input::triggered?(:N) and not @test then
-	Input::triggered.delete(:N)
-	@state=:input
-	@test=TextInput.new(1, 27, 'Default text')
-    end
-    if @test then
-	ed = @test.edit
-      if ed[0] == :ok then
-	puts ed[1]
-        @test=nil
-	@state=:default
-      elsif ed[0] == :cancel then
-        puts ed[1]
-	@state=:default
-        @test=nil
-      else
-        #nothing
-      end
-    end
-    
-    # for manual buffer window
-    if @state==:default then
-	if Input::is_pressed?(:left) and @cur_x>0 then @cur_x-=1 end
-	if Input::is_pressed?(:right) and @cur_x<54 then @cur_x+=1 end
-        if Input::is_pressed?(:up) and @cur_y>0 then @cur_y-=1 end
-        if Input::is_pressed?(:down) and @cur_y<38 then @cur_y+=1 end
-     end
-    @update_time=Gosu::milliseconds()-start #benchmark end
+
+	@update_time=Gosu::milliseconds()-start #benchmark end
   end
   
   def draw()
@@ -94,28 +84,14 @@ class GameWindow < Gosu::Window
 	#draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
 	# Z order: Background, Base, Foreground, Overlay
 	#draw_text(x,y,text,color) - Z always at 1 to be drawn above everything else
+	#draw_buffer(x,y,width,height,buffer,off_x,off_y)
 	
-	draw_frame(0, 0, 64, 26, Foreground, 0xFF999999, :single)
-	draw_buffer(1, 1, 10, 10, @buffer)
-	draw_text(1,11,"Top left")
-	draw_buffer(12,1,10,10, @buffer,0,9)
-	draw_text(12,11,"Y+9")
-	draw_buffer(23,1,10,10, @buffer,9,0)
-	draw_text(23,11,"X+9")
-	draw_buffer(34,1,10,10, @buffer,9,9)
-	draw_text(34,11,"X+9,Y+9")
-	draw_buffer(45,1,10,10, @buffer,@cur_x,@cur_y)
-	draw_text(45,11,"Manual view")
-	draw_buffer(1,15,62,10,@buffer,0,38)
-	draw_text(1,14,"Bottom part of the buffer",0xFFDDDDDD)
-	
-	
-	draw_text(1, 26, "TextInput test, press", 0xFFFFFFAA)
-	draw_text(22, 26," n ",0xFF00FFFF)
-	draw_text(25, 26,"to begin typing.", 0xFFFFFFAA)
-	draw_text(1, 46, @keys.inspect.to_s , 0xFFFFFFFF) 
-	draw_text(1,47,Input::triggered*",",0xFFCCCCCC) 
-	if @test then @test.draw end
+	draw_buffer(0,0,64,48,@buffer,@cursor_x,@cursor_y)
+	draw_tiles(32,24,1,:fill100,0x88000000) #clear
+	draw_tiles(32,24,1,:face_full,0xFFCCCC33)
+	if @noise then 
+		draw_tiles(0,0,1,[:fill100]*20,0x88000000) #clear for text below
+		draw_text(0,0,@cursor_x.to_s+"x"+@cursor_y.to_s+" : "+@noise[@cursor_x+32][@cursor_y+24].to_s,0xFFCCFFFF) end
 
 	update_draw = Gosu::milliseconds()-start #benchmark end
 	self.caption=(@update_time+update_draw).to_s+" ms"

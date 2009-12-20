@@ -1,77 +1,85 @@
 module Noise
-	attr_accessor :width, :height, :seed, :persistance, :amplitude, :base_noise
-	#change these values
-	@width = 8
-	@height = 8
-	@seed = 1
-	@persistance=0.5
-	@amplitude=1.0
-	@octaves=8
-	@base_noise=Array.new(@width){Array.new(@height,0)}
-
-	def self.uniform_noise()
-		@width.times do |i|
-			@height.times do |j|
-				@base_noise[i][j]=rand
-			end
-		end
-	end
+	class << self; end
 	
-	def self.generate_noise(base_noise,k)
-		sample_period = 2**k
-		sample_frequency = 1.0/sample_period
-		smooth=Array.new(@width){Array.new(@height,0)}
-		
-		@width.times do |i|
-			sample_i0 = (i >> k) << k
-			sample_i1 = sample_i0  % @width
-			horizontal_blend = (i-sample_i0)*sample_frequency
-			@height.times do |j|
-				sample_j0 = ( j >> k) << k
-				sample_j1 = (sample_j0+1) % @height
-				vertical_blend = (j - sample_j0)*sample_frequency
-				top=interpolate(@base_noise[sample_i0][sample_j0],@base_noise[sample_i1][sample_j1],horizontal_blend)
-				bottom=interpolate(@base_noise[sample_i0][sample_j0],@base_noise[sample_i1][sample_j1],vertical_blend)
-				smooth[i][j]=interpolate(top,bottom,vertical_blend)
-			end
-		end
-		return smooth
-	end
-	
-	def self.interpolate(x0,x1,alpha)
-		return (1-alpha)*x0 + alpha*x1
-	end
-	
-	def self.generate_perlin(octaves=@octaves,base=@base_noise)
-		smooth=[]
-
-		#generate noises
-		octaves.times do |k| 
-			smooth[k]=generate_noise(base,k)
-		end
-		
-		persistance = @persistance
-		amplitude=@amplitude
-		total_amplitude=0
-		perlin=Array.new(@width){Array.new(@height, 0)}
-		#blend noises
-		octaves.times do |k|
-			amplitude*=persistance
-			total_amplitude+=amplitude
-			@width.times do |i|
-				@height.times do |j|
-					perlin[i][j]+=smooth[k][i][j]*amplitude
-				end
-			end
-		end
-		#normalization
-		@width.times do |i| 
-			@height.times do |j| perlin[i][j]/=total_amplitude end
-			end
-		return perlin
-	end
+  def self.rando
+    rand()-0.5
+  end
+  
+  def self.go(times)
+    arrays = [[0]]
+    
+    ratio = 2
+    
+    times.times do
+      arrays.map! do |array|
+        insert_nils(array)
+      end
+      arrays = insert_arrays(arrays)
+      compute_from_diagonals(arrays) {|a, b, c, d| (a + b + c + d)/4 + rando*ratio} 
+      compute_from_adjacents(arrays) {|a, b, c, d| (a + b + c + d)/4 + rando*ratio}
+      ratio *= 0.5
+    end
+    
+    return arrays
+  end
+  
+  def self.insert_arrays(arrays)
+    new_arrays = []
+    arrays.size.times do |i|
+      array = arrays[i]
+      new_arrays.push array, Array.new(array.size, 0.0)
+    end
+    return new_arrays
+  end
+  
+  def self.insert_nils(array)
+    new_array = []
+    array.size.times do |i|
+      new_array.push(array[i], 0.0)
+    end
+    return new_array
+  end
+  
+  def self.compute_from_adjacents(arrays)
+    n = arrays.size
+    n.times do |row|
+      n.times do |col|
+        next if (row + col) % 2 == 0
+        arrays[row][col] = 
+          yield(arrays[(row-1)%n][col], arrays[row][(col-1)%n],
+                arrays[row][(col+1)%n], arrays[(row+1)%n][col])
+      end
+    end
+  end
+  
+  def self.compute_from_diagonals(arrays)
+    n = arrays.size
+    n.times do |row|
+      next if row % 2 == 0
+      n.times do |col|
+        next if col % 2 == 0
+        arrays[row][col] = 
+          yield(arrays[(row-1)%n][(col-1)%n], arrays[(row-1)%n][(col+1)%n],
+                arrays[(row+1)%n][(col-1)%n], arrays[(row+1)%n][(col+1)%n])
+      end
+    end
+  end
+  
+  def self.print_arrays(arrays)
+    i = 0
+    arrays.each do |array|
+      print "%4d: " % i
+      array.each do |ele|
+        print '%1.3f ' % ele
+      end
+      i += 1
+      puts
+    end
+    puts '---------------------------------------'
+  end
 end
 
-Noise.uniform_noise()
-noise=Noise.generate_perlin()
-puts noise.inspect
+#~ start=Time.now
+#~ array=DiamondSquare.go(3)
+#~ puts (Time.now-start)
+#~ DiamondSquare.print_arrays(array)
