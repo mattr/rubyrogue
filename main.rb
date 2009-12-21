@@ -43,6 +43,7 @@ class GameWindow < Gosu::Window
     @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
     @cursor_x=0
     @cursor_y=0
+    @alpha = []
   end
   
   def update()
@@ -76,11 +77,12 @@ class GameWindow < Gosu::Window
 	#~ else end
 	
 	if Input.triggered?(:' ') then 
-		alpha=Text.new(rand(10),rand(10),"Hello world!")
+		@alpha << Text.new(rand(10),rand(10),"Hello world!")
 	end
-	if Input.triggered?(:esc) and alpha then
-			Drawable::remove(alpha)
-			alpha=nil
+	if Input.triggered?(:esc) and not @alpha.empty? then
+      puts 'removing'
+      obj = @alpha.pop
+			Drawable::remove(obj) if obj
 		end
 
 	@update_time=Gosu::milliseconds()-start #benchmark end
