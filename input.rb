@@ -1,5 +1,6 @@
 require 'gosu'
 require 'display'
+require 'handler'
 include Interface
 
 # This class is responsible for reading pressed keys and tracking them
@@ -123,6 +124,9 @@ end
 
 	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
 class TextInput
+	include Updatable
+	include Drawable
+	
 	def initialize(x,y,text='',length=64)
 		@default=text
 		@x = x
@@ -130,10 +134,9 @@ class TextInput
 		@content=text.split('').collect{|s| s.intern}
 		@limit=length
 		@cursor=text.length
-
 	end
 	
-	def edit
+	def update
 		if Input.triggered?(:esc) then return [:cancel,@default]
 		elsif Input.triggered?(:enter) then return [:ok,@content.join]
 		else 

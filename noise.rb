@@ -78,8 +78,3 @@ module Noise
     puts '---------------------------------------'
   end
 end
-
-#~ start=Time.now
-#~ array=DiamondSquare.go(3)
-#~ puts (Time.now-start)
-#~ DiamondSquare.print_arrays(array)
