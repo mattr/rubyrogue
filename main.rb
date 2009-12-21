@@ -75,11 +75,12 @@ class GameWindow < Gosu::Window
 	#~ elsif Input.is_pressed?(:down) and not Input.active.include?(:up) then @cursor_y+=1
 	#~ else end
 	
-	if Input.triggered?(:' ') then alpha=TextInput.new(rand(10),rand(10)) end
+	if Input.triggered?(:' ') then 
+		alpha=Text.new(rand(10),rand(10),"Hello world!")
+	end
 	if Input.triggered?(:esc) and alpha then
-			Updatable::remove(alpha)
 			Drawable::remove(alpha)
-			alpha=nil 
+			alpha=nil
 		end
 
 	@update_time=Gosu::milliseconds()-start #benchmark end

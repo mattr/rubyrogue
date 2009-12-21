@@ -4,6 +4,7 @@
 # GUI (frames, 'selectors' etc.) - context sensitive! 
 # 
 require 'gosu'
+require 'handler'
 
 module Interface
 	class << self; attr_writer :tileset end
@@ -55,5 +56,20 @@ module Interface
 		draw_tiles(x+1,y+height-1,z_order,[tiles[:horizontal]]*(width-2),color,:horizontal)
 		draw_tiles(x,y+1,z_order,[tiles[:vertical]]*(height-2),color,:vertical)
 		draw_tiles(x+width-1,y+1,z_order,[tiles[:vertical]]*(height-2),color,:vertical)
+	end
+end
+
+class Text
+	attr_accessor :state, :content, :x, :y, :color
+	include Drawable
+	def initialize(x,y,content='',color=0xFFFFFFFF)
+		@content=content
+		@x=x
+		@y=y
+		@color=color		
+	end
+		
+	def draw
+		Interface::draw_text(@x,@y,@content,@color)
 	end
 end
