@@ -66,10 +66,15 @@ class Text
 		@content=content
 		@x=x
 		@y=y
-		@color=color		
+		@color=color
+		yield if block_given?
 	end
 		
 	def draw
 		Interface::draw_text(@x,@y,@content,@color)
+	end
+	
+	def remove
+		Drawable::remove(self)
 	end
 end

@@ -9,7 +9,6 @@ module Sorted # this is an inefficient implementation (n^2 rather than log(n)), 
   def self.relocate(array, object, &block)
     sort_predicate = block || DEFAULT_PREDICATE
     array.sort!(&sort_predicate)
-    puts array.inspect
   end
 end
 

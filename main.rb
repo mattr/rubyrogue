@@ -43,7 +43,9 @@ class GameWindow < Gosu::Window
     @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
     @cursor_x=0
     @cursor_y=0
-    @alpha = []
+    @alpha = nil
+    @omega_1=create(@omega_1,Text,0,0,"Press   or   to show stuff,       to clear text",0xFFCCCC00)
+    @omega_2=create(@omega_2,Text,0,0,"      1    2                Space",0xFF00CCCC)
   end
   
   def update()
@@ -76,16 +78,23 @@ class GameWindow < Gosu::Window
 	#~ elsif Input.is_pressed?(:down) and not Input.active.include?(:up) then @cursor_y+=1
 	#~ else end
 	
-	if Input.triggered?(:' ') then 
-		@alpha << Text.new(rand(10),rand(10),"Hello world!")
+	if Input.triggered?(:'1') then 
+		@alpha=create(@alpha,Text,28,24,"Ho ho ho")
 	end
-	if Input.triggered?(:esc) and not @alpha.empty? then
-      puts 'removing'
-      obj = @alpha.pop
-			Drawable::remove(obj) if obj
-		end
+	if Input.triggered?(:'2') then 
+		@beta=create(@beta,Text,28,25,"Ha ha ha")
+	end
+	if Input.triggered?(:' ') then
+		if @alpha then @alpha.remove end
+		if @beta then @beta.remove end
+	end
 
 	@update_time=Gosu::milliseconds()-start #benchmark end
+  end
+  
+  def create(*args, &block)
+	if args[0] then args[0].remove end
+	return args[1].new(*args[2..-1], &block)
   end
   
   def draw()
