@@ -210,13 +210,13 @@ class Tileset < Gosu::Image
     :root_roof, # n
     :square, # 2
     :box, # square
-    :empty # nothing
+    :fill # full fill without border
   ]
 
  
 ALTERNATE_SYMBOLS = {}
 
-  def Tileset.new(window, filename="Cooz_16x16.png", symbols = SYMBOLS, alternate = ALTERNATE_SYMBOLS) # filenames are case sensitive on some OSes
+  def Tileset.new(window, filename="cooz_16x16.png", symbols = SYMBOLS, alternate = ALTERNATE_SYMBOLS) # filenames are case sensitive on some OSes
     tileset_array = Tileset.load_tiles(window, filename, 16, 16, 0)
     hash = Hash[*symbols.zip(tileset_array).flatten]
     alternate.each {|key, value| hash[key] = hash[value]}

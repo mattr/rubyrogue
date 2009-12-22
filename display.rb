@@ -7,7 +7,7 @@ require 'gosu'
 require 'handler'
 
 module Interface
-	class << self; attr_writer :tileset end
+	class << self; attr_accessor :tileset end
 	
 	def draw_tiles(x,y,z_order,content,color=0xFFFFFFFF,direction=:horizontal)
 		#expected argument must be either a Symbol or an Array of symbols
@@ -35,28 +35,6 @@ module Interface
 			end
 		end
 	end
-	
-	# draw a rectangular frame
-	def draw_frame(x,y,width,height,z_order,color=0xFFFFFFFF,type=:double)
-		case type
-			when :double then
-				tiles={:topleft => :table_topleft_double, :topright => :table_topright_double, :bottomright => :table_bottomright_double, :bottomleft => :table_bottomleft_double, :horizontal => :table_horizontal_double, :vertical => :table_vertical_double}
-			when :single then
-				tiles={:topleft => :table_topleft_single, :topright => :table_topright_single, :bottomright => :table_bottomright_single, :bottomleft => :table_bottomleft_single, :horizontal => :table_horizontal_single, :vertical => :table_vertical_single} 
-			when :solid then 
-				tiles={:topleft => :fill100, :topright => :fill100, :bottomright => :fill100, :bottomleft => :fill100, :horizontal => :fill100, :vertical => :fill100}
-			when :heart then
-				tiles={:topleft => :heart, :topright => :heart, :bottomright => :heart, :bottomleft => :heart, :horizontal => :heart, :vertical => :heart}
-		end
-		draw_tiles(x,y,z_order,tiles[:topleft],color,:horizontal)
-		draw_tiles(x+width-1,y,z_order,tiles[:topright],color,:horizontal)
-		draw_tiles(x+width-1,y+height-1,z_order,tiles[:bottomright],color,:horizontal)
-		draw_tiles(x,y+height-1,z_order,tiles[:bottomleft],color,:horizontal)
-		draw_tiles(x+1,y,z_order,[tiles[:horizontal]]*(width-2),color,:horizontal)
-		draw_tiles(x+1,y+height-1,z_order,[tiles[:horizontal]]*(width-2),color,:horizontal)
-		draw_tiles(x,y+1,z_order,[tiles[:vertical]]*(height-2),color,:vertical)
-		draw_tiles(x+width-1,y+1,z_order,[tiles[:vertical]]*(height-2),color,:vertical)
-	end
 end
 
 class Text
@@ -67,11 +45,78 @@ class Text
 		@x=x
 		@y=y
 		@color=color
+		@state=:enabled
 		yield if block_given?
 	end
 		
 	def draw
-		Interface::draw_text(@x,@y,@content,@color)
+		if @state==:enabled then Interface::draw_text(@x,@y,@content,@color) end
+	end
+	
+	def remove
+		Drawable::remove(self)
+	end
+end
+
+class Tile
+	attr_accessor :state, :content, :x, :y, :z, :color, :direction
+	include Drawable
+	
+	def initialize(x,y,z=0,content=:empty,color=0xFFFFFFFF,direction=:horizontal)
+		@x=x
+		@y=y
+		@z=z
+		@content=content
+		@color=color
+		@direction=direction
+		@state=:enabled
+	end
+	
+	def draw
+		if @state==:enabled then Interface::draw_tiles(@x,@y,@z,@content,@color,@direction) end
+	end
+	
+	def remove
+		Drawable::remove(self)
+	end
+end
+
+class Frame
+	attr_accessor :state, :x, :y, :width, :height, :z, :color, :type, :tileset
+	include Drawable
+	# order: topleft corner, topright corner, bottomright corner, bottomleft corner, horizontal, vertical
+	FRAME_DOUBLE=[:table_topleft_double,:table_topright_double,:table_bottomright_double,:table_bottomleft_double,:table_horizontal_double,:table_vertical_double]
+	FRAME_SINGLE=[:table_topleft_single,:table_topright_single, :table_bottomright_single,:table_bottomleft_single, :table_horizontal_single, :table_vertical_single]
+	
+	def initialize(x,y,width,height,z=0,color=0xFFFFFFFF,type=:single)
+		@x=x
+		@y=y
+		@z=z
+		@width=width
+		@height=height
+		@color=color
+		@type=type
+		@state=:enabled
+		@tiles=FRAME_SINGLE
+	end
+	
+	def draw
+		if @state==:enabled then
+			if type==:double then
+				@tiles=FRAME_DOUBLE
+			elsif type==:single then
+				@tiles=FRAME_SINGLE
+			else @tiles=[@type]*6
+			end
+			Interface::draw_tiles(@x,               @y,                @z,@tiles[0],                    @color) #topleft corner
+			Interface::draw_tiles(@x+@width-1,@y,                @z,@tiles[1],                    @color) #topright corner
+			Interface::draw_tiles(@x+@width-1,@y+@height-1,@z,@tiles[2],                    @color) #bottomright corner
+			Interface::draw_tiles(@x,               @y+@height-1,@z,@tiles[3],                    @color) #bottomleft corner
+			if @width>2 then Interface::draw_tiles(@x+1,           @y,                @z,[@tiles[4]]*(@width-2), @color,:horizontal) end #horizontal wall (upper)
+			if @width>2 then Interface::draw_tiles(@x+1,           @y+@height-1,@z,[@tiles[4]]*(@width-2), @color,:horizontal) end #horizontal wall (lower)
+			if @height>2 then Interface::draw_tiles(@x,               @y+1,            @z,[@tiles[5]]*(@height-2),@color,:vertical) end #vertical wall (left)
+			if @height>2 then Interface::draw_tiles(@x+@width-1,@y+1,            @z,[@tiles[5]]*(@height-2),@color,:vertical) end #vertical wall (right)
+		end
 	end
 	
 	def remove

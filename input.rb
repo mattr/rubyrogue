@@ -65,10 +65,10 @@ module Input
     :home => [Gosu::KbHome],
     :ins => [Gosu::KbInsert],
     :left => [Gosu::KbLeft],
-    :plus => [Gosu::KbNumpadAdd,13],
-    :divide => [Gosu::KbNumpadDivide],
-    :multiply => [Gosu::KbNumpadMultiply],
-    :minus => [Gosu::KbNumpadSubtract],
+    :'+' => [Gosu::KbNumpadAdd,13],
+    :'/' => [Gosu::KbNumpadDivide],
+    :'*' => [Gosu::KbNumpadMultiply],
+    :'-' => [Gosu::KbNumpadSubtract],
     :pagedown => [Gosu::KbPageDown],
     :pageup => [Gosu::KbPageUp],
     :enter => [Gosu::KbReturn],
@@ -88,6 +88,9 @@ module Input
   ALPHABET=('A'..'Z').to_a.collect{|s| s.intern}
   NUMBERS=(0..9).to_a.collect{|n| n.to_s.intern}
   ALPHANUMERIC=ALPHABET+NUMBERS+[:' ']
+  ARROWS=[:left,:right,:up,:down]
+  PAGE_CONTROLS=[:home,:end,:pageup,:pagedown]
+  FUNCTION=[:F1,:F2,:F3,:F4,:F5,:F6,:F7,:F8,:F9,:F10,:F11,:F12]
     @active= {}
     @triggered=[]
 	
@@ -105,7 +108,8 @@ module Input
 		else
 			@active.delete(symbol)
 		end
-		end
+	end
+	return [@active,@triggered]
 	end
 
 	def self.triggered?(key)
@@ -124,9 +128,12 @@ end
 
 	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
 class TextInput
+	attr_accessor :content, :x, :y, :limit, :triggers, :controls
 	include Updatable
 	include Drawable
-	
+	include Inputable
+	TRIGGERS=[:enter, :esc, :ins, :home, :end] #single keypress
+	CONTROLS=Input::ALPHANUMERIC+[:left,:right,:backspace,:delete] #continuous keypress
 	def initialize(x,y,text='',length=64)
 		@default=text
 		@x = x
@@ -134,53 +141,63 @@ class TextInput
 		@content=text.split('').collect{|s| s.intern}
 		@limit=length
 		@cursor=text.length
+		@mode=:insert # :insert or :replace, based on Insert key, insert by default
+		@triggers=[]
+		@controls={}
 	end
 	
 	def update
-		if Input.triggered?(:esc) then return [:cancel,@default]
-		elsif Input.triggered?(:enter) then return [:ok,@content.join]
-		else 
-			if Input.is_pressed?(:left) and (@cursor)>0 then @cursor-=1
-			elsif Input.is_pressed?(:right) and @cursor<@content.length and @cursor<@limit then @cursor+=1
-			elsif Input.is_pressed?(:delete) then @content.delete_at(@cursor)
-			elsif Input.is_pressed?(:backspace) and not @content.empty? then 
-				@content.delete_at(@cursor-1)
-				if @cursor>0 then @cursor-=1 end
-			else
-				Input::ALPHANUMERIC.each {|letter| 
-					if Input.is_pressed?(letter) then 
-						if @cursor<@content.length and @content.length<@limit then 
-							if Input::ALPHABET.include?(letter) then
-								if Input.active.include?(:shift) then @content.insert(@cursor,letter)
-								else @content.insert(@cursor,letter.to_s.downcase.intern) end
-							else
-								@content.insert(@cursor,letter)
-								@cursor+=1
-							end
-						elsif @content.length<@limit then 
-							if Input::ALPHABET.include?(letter) then
-								if Input.active.include?(:shift) then @content << letter
-								else @content << letter.to_s.downcase.intern end
-							else
-								@content << letter
-							end
-							@cursor+=1
-						else
-							if Input::ALPHABET.include?(letter) then
-								if Input.active.include?(:shift) then @content[@cursor]=letter
-								else @content[@cursor]=letter.to_s.downcase.intern end
-							else @content[@cursor]=letter
-							end
-						end
-					end }
-			end
-			return [:pending,@content.join]
-		end		
+		#below code is deprecated
+		#~ if Input.triggered?(:esc) then return [:cancel,@default]
+		#~ elsif Input.triggered?(:enter) then return [:ok,@content.join]
+		#~ else 
+			#~ if Input.is_pressed?(:left) and (@cursor)>0 then @cursor-=1
+			#~ elsif Input.is_pressed?(:right) and @cursor<@content.length and @cursor<@limit then @cursor+=1
+			#~ elsif Input.is_pressed?(:delete) then @content.delete_at(@cursor)
+			#~ elsif Input.is_pressed?(:backspace) and not @content.empty? then 
+				#~ @content.delete_at(@cursor-1)
+				#~ if @cursor>0 then @cursor-=1 end
+			#~ else
+				#~ Input::ALPHANUMERIC.each {|letter| 
+					#~ if Input.is_pressed?(letter) then 
+						#~ if @cursor<@content.length and @content.length<@limit then 
+							#~ if Input::ALPHABET.include?(letter) then
+								#~ if Input.active.include?(:shift) then @content.insert(@cursor,letter)
+								#~ else @content.insert(@cursor,letter.to_s.downcase.intern) end
+							#~ else
+								#~ @content.insert(@cursor,letter)
+								#~ @cursor+=1
+							#~ end
+						#~ elsif @content.length<@limit then 
+							#~ if Input::ALPHABET.include?(letter) then
+								#~ if Input.active.include?(:shift) then @content << letter
+								#~ else @content << letter.to_s.downcase.intern end
+							#~ else
+								#~ @content << letter
+							#~ end
+							#~ @cursor+=1
+						#~ else
+							#~ if Input::ALPHABET.include?(letter) then
+								#~ if Input.active.include?(:shift) then @content[@cursor]=letter
+								#~ else @content[@cursor]=letter.to_s.downcase.intern end
+							#~ else @content[@cursor]=letter
+							#~ end
+						#~ end
+					#~ end }
+			#~ end
+			#~ return [:pending,@content.join]
+		#~ end		
 	end
 	
 	def draw
-		if (not @content.empty?) then Interface::draw_tiles(@x,@y,0,@content) end
-		if (Gosu::milliseconds()%500>100) then Interface::draw_tiles(@x+@cursor,@y,1,:fill100,0x88FFFF00) end
+		#also deprecated
+		#~ if (not @content.empty?) then Interface::draw_tiles(@x,@y,0,@content) end
+		#~ if (Gosu::milliseconds()%500>100) then Interface::draw_tiles(@x+@cursor,@y,1,:fill100,0x88FFFF00) end
 	end
 	
+	def remove
+		Updatable::remove(self)
+		Drawable::remove(self)
+		Inputable::remove(self)
+	end
 end

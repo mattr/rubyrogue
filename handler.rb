@@ -1,3 +1,21 @@
+# handle, uh, stuff like Updatable, Drawable and such
+module Handler
+
+#sample syntax: @var=create(@var,Text,x,y,"Actual text",color)
+  def create(*args, &block)
+	if args[0] then args[0].remove end
+	return args[1].new(*args[2..-1], &block)
+  end
+
+  def self.clear #this clears all drawable and updatable instances from the handlers
+	Drawable.instances.clear
+	Updatable.instances.clear
+  end
+
+  def self.remove(*args) #remove selected instances
+	args.each {|item| if item then item.remove end}
+  end
+end
 module Sorted # this is an inefficient implementation (n^2 rather than log(n)), but it works
   DEFAULT_PREDICATE = Proc.new{|x, y| x[1] <=> y[1]}
 
@@ -23,7 +41,7 @@ module Drawable
   end
   
   def self.remove(obj)
-    instances.delete([obj, obj.draw_priority]) # this is also suboptimal (O(n) rather than log(n))
+    @instances.delete([obj, obj.draw_priority]) # this is also suboptimal (O(n) rather than log(n))
   end
   
   def draw_priority
@@ -59,7 +77,7 @@ module Updatable
   end
   
   def self.remove(obj)
-    instances.delete([obj, obj.update_priority]) # this is also suboptimal (O(n) rather than log(n))
+    @instances.delete([obj, obj.update_priority]) # this is also suboptimal (O(n) rather than log(n))
   end
   
   def update_priority
@@ -84,62 +102,43 @@ module Updatable
   end
 end
 
-#~ class Character
-  #~ include Drawable
-  #~ include Updatable
-  
-  #~ def draw
-    #~ puts inspect
-  #~ end
-  
-  #~ def update
-    #~ puts inspect
-  #~ end
-  
-  #~ def initialize(x,y)
-    #~ @x = x
-    #~ @y = y
-    #~ yield if block_given?
-  #~ end
-#~ end
-
-#~ class Enemy
-  #~ include Drawable
-  
-  #~ def draw
-    #~ puts inspect
-  #~ end
-  
-  #~ def initialize
-    #~ yield if block_given?
-  #~ end
-#~ end
-
-#~ c1 = Character.new(0, 0){puts 'c1'}
-#~ c2 = Character.new(1, 1){puts 'c2'}
-#~ e1 = Enemy.new
-#~ e2 = Enemy.new
-#~ e3 = Enemy.new
-#~ e4 = Enemy.new
-
-#~ c1.draw_priority = 1
-#~ e2.draw_priority = 2
-#~ e3.draw_priority = 3
-#~ c2.draw_priority = 4
-#~ e4.draw_priority = 5
-
-#~ c2.update_priority = -1
-
-#~ puts '---update---'
-#~ Updatable::do!
-#~ puts '----draw----'
-#~ Drawable::do!
-
-#~ Drawable::remove(e2)
-#~ Drawable::remove(e4)
-#~ Updatable::remove(c2)
-
-#~ puts '---update---'
-#~ Updatable::do!
-#~ puts '----draw----'
-#~ Drawable::do!
+# passes input to input handlers, effectively filtering it
+module Inputable
+	class << self; attr_accessor :handlers, :input end
+	@handlers=[]
+	@input=[]
+	
+	def self.do!
+		@handlers.each do |handler|
+		handle(handler)
+		break if @input.empty?
+		end
+	end
+	
+	def self.included(base)
+		class << base
+			alias :inputable_old_new new
+			def new(*args,&block)
+				instance=inputable_old_new(*args,&block)
+				Inputable::handlers << instance
+				return instance
+			end
+		end
+	end
+	
+	def self.handle(instance) #handle the keyboard input
+		instance.triggers=@input[1]&instance.class::TRIGGERS # compare triggers, save ones that match
+		@input[1]-=instance.triggers # 'claim' the used triggers
+		@input[0].each_pair do |key,value| #controls are hashes: {key => number of ticks pressed}
+			if instance.class::CONTROLS.include?(key) then
+				if instance.controls[key] then instance.controls[key]+=1 #if the key exists, increment the value
+				else instance.controls[key]=value end #otherwise create a new key
+				@input[0].delete(key) #'claim' the key
+			end
+		end
+	end
+	
+	def self.remove(obj)
+		@handlers.delete(obj)
+	end
+end

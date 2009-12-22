@@ -6,32 +6,22 @@ require 'cut' # various snippets such as the new rand()
 require 'noise'
 require 'handler'
 
-COLORS={
-	:white => 0xFFFFFFFF,
-	:red => 0xFFFF0000,
-	:green => 0xFF00FF00,
-	:blue => 0xFF0000FF,
-	:yellow => 0xFFFFFF00,
-	:purple => 0xFFFF00FF,
-	:cyan => 0xFF00FFFF,
-	:gray => 0xFFAAAAAA
-}
-
   include Interface
   include Math
   include Noise
+  include Handler
 
 class GameWindow < Gosu::Window
 	attr_accessor :keys, :WIDTH, :HEIGHT
 	Background, Base, Foreground, Overlay = *0..3 # Z levels
 	WIDTH, HEIGHT = 64, 48 # width and height in tiles, based on 1024x768 with 16x16 tiles
+	
 # advanced initialization, not really needed now
 #  def initialize(ini)
 #    x=ini['Display']['DisplayX']
 #    y=ini['Display']['DisplayY']
 #    z=ini['Display']['Fullscreen']
 #    super(x.to_i,y.to_i,z.to_i)
-  
   def initialize
     super(1024, 768, 0)
     self.caption="Generic title"
@@ -43,59 +33,42 @@ class GameWindow < Gosu::Window
     @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
     @cursor_x=0
     @cursor_y=0
-    @alpha = nil
-    @omega_1=create(@omega_1,Text,0,0,"Press   or   to show stuff,       to clear text",0xFFCCCC00)
-    @omega_2=create(@omega_2,Text,0,0,"      1    2                Space",0xFF00CCCC)
+    @debug1=create(@debug1,Text,0,0,"Press  ,  ,   or   to show stuff,       to remove them",0xFFFFFF22)
+    @debug2=create(@debug2,Text,0,0,"      1  2  3    4                Space",0xFF22FFFF)
+    @debug3=create(@debug3,Text,0,47,'',0xFF888888)
+    @debug4=create(@debug4,Text,0,46,'',0xFF999999)
   end
+  
   
   def update()
 	start = Gosu::milliseconds() #benchmark start
+
+	Inputable.input=Input::read(self) #needs to come before Inputable.do!
+	Inputable.do!
+	@debug3.content="Filtered keys: "+Inputable.input.inspect #debug
+	@debug4.content="Handlers: "+Inputable.handlers.length.inspect
 	Updatable::do!
-	Input::read(self)
-	#~ if Input.triggered?(:enter) then
-		
-		#~ @noise=Noise.go(8)
-		#~ 64.times do |i|
-			#~ 64.times do|j|
-				#~ if @noise[i][j]<=-0.5 then @buffer[i][j]=[rand([:double_tilde,:"~"]),0xFF3333FF] #deep ocean
-				#~ elsif @noise[i][j]>-0.5 and @noise[i][j]<= -0.25 then @buffer[i][j]=[rand([:double_tilde,:"~"]),0xFF0077FF] #not so deep sea
-				#~ elsif @noise[i][j]>-0.25 and @noise[i][j]<= 0.0 then @buffer[i][j]=[rand([:double_tilde,:"~"]),0xFF00AAFF] #shallow waters
-				#~ elsif @noise[i][j]>0.0 and @noise[i][j]<= 0.1 then @buffer[i][j]=[:"~",0xFFCCCC00] #coastline (sand dunes)
-				#~ elsif @noise[i][j]>0.1 and @noise[i][j]<= 0.25 then @buffer[i][j]=[rand([:",",:".",:";",:":"]),rand([0xFF00FF00,0xFF33BB33,0xFF66FF66,0xFF55FF00])] # lowland grass
-				#~ elsif @noise[i][j]>0.25 and @noise[i][j]<= 0.50 then @buffer[i][j]=[rand([:",",:".",:";",:":",:spade,:club,:'"',:arrow_up]),rand([0xFF00FF00,0xFF33BB33,0xFF66FF66,0xFF55FF00,0xFFCCFF33])] # lowland grass
-				#~ elsif @noise[i][j]>0.5 and @noise[i][j]<= 0.75 then @buffer[i][j]=[:triangle_up,rand([0xFFCCCC33,0xFF888800,0xFFAA5511])] #hills?
-				#~ else @buffer[i][j]=[:triangle_up,rand([0xFF555555,0xFF333333,0xFF777777,0xFF999999,0xFFFFFFFF])]
-				#~ end
-			#~ end
-		#~ end
-				
-	#~ end
-	
-	#~ if Input.is_pressed?(:left) and not Input.active.include?(:right) then @cursor_x-=1
-	#~ elsif Input.is_pressed?(:right) and not Input.active.include?(:left) then @cursor_x+=1
-	#~ else end
-	#~ if Input.is_pressed?(:up) and not Input.active.include?(:down) then @cursor_y-=1
-	#~ elsif Input.is_pressed?(:down) and not Input.active.include?(:up) then @cursor_y+=1
-	#~ else end
 	
 	if Input.triggered?(:'1') then 
 		@alpha=create(@alpha,Text,28,24,"Ho ho ho")
 	end
 	if Input.triggered?(:'2') then 
-		@beta=create(@beta,Text,28,25,"Ha ha ha")
+		@beta=create(@beta,Tile,28,25,0,[:heart]*8,0xFFFF2222,:horizontal)
+	end
+	if Input.triggered?(:'3') then
+		@gamma=create(@gamma,Frame,27,23,10,5,0,0xFFFF0000,rand([:heart,:fill,:double,:single,:box,:face_full,:face_empty,:ring]))
+	end
+	if Input.triggered?(:'4') and not @delta then
+		@delta=create(@delta,TextInput,28,26,'Text',7)
 	end
 	if Input.triggered?(:' ') then
-		if @alpha then @alpha.remove end
-		if @beta then @beta.remove end
+		Handler.remove(@alpha,@beta,@gamma,@delta)
 	end
 
 	@update_time=Gosu::milliseconds()-start #benchmark end
   end
   
-  def create(*args, &block)
-	if args[0] then args[0].remove end
-	return args[1].new(*args[2..-1], &block)
-  end
+  
   
   def draw()
 	start = Gosu::milliseconds() #benchmark start
@@ -107,13 +80,6 @@ class GameWindow < Gosu::Window
 	# Z order: Background, Base, Foreground, Overlay
 	#draw_text(x,y,text,color) - Z always at 1 to be drawn above everything else
 	#draw_buffer(x,y,width,height,buffer,off_x,off_y)
-	
-	#~ draw_buffer(0,0,64,48,@buffer,@cursor_x,@cursor_y)
-	#~ draw_tiles(32,24,1,:fill100,0x88000000) #clear
-	#~ draw_tiles(32,24,1,:face_full,0xFFCCCC33)
-	#~ if @noise then 
-		#~ draw_tiles(0,0,1,[:fill100]*20,0x88000000) #clear for text below
-		#~ draw_text(0,0,(@cursor_x+32).to_s+"x"+(@cursor_y+24).to_s+" : "+@noise[@cursor_x+32][@cursor_y+24].to_s,0xFFCCFFFF) end
 
 	update_draw = Gosu::milliseconds()-start #benchmark end
 	self.caption=(@update_time+update_draw).to_s+" ms"
