@@ -27,26 +27,20 @@ class GameWindow < Gosu::Window
     self.caption="Generic title"
     @tileset=Tileset.new(self)
     Interface::tileset=@tileset
-    @color=Gosu::Color.new(255, 255, 0, 0)
     @update_time=0
-    @keys=Input::active
     @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
     @cursor_x=0
     @cursor_y=0
-    @debug1=create(@debug1,Text,0,0,"Press  ,  ,   or   to show stuff,       to remove them",0xFFFFFF22)
+    @debug1=create(@debug1,Text,0,0,"Press  ,  ,   or   to show stuff,       to remove them all",0xFFFFFF22)
     @debug2=create(@debug2,Text,0,0,"      1  2  3    4                Space",0xFF22FFFF)
-    @debug3=create(@debug3,Text,0,47,'',0xFF888888)
-    @debug4=create(@debug4,Text,0,46,'',0xFF999999)
   end
   
   
   def update()
 	start = Gosu::milliseconds() #benchmark start
-
-	Inputable.input=Input::read(self) #needs to come before Inputable.do!
-	Inputable.do!
-	@debug3.content="Filtered keys: "+Inputable.input.inspect #debug
-	@debug4.content="Handlers: "+Inputable.handlers.length.inspect
+	
+	Inputable.input=Input::read_keys(self) #needs to come before Inputable.do!
+	Inputable.do! #should come before Updatable::do!
 	Updatable::do!
 	
 	if Input.triggered?(:'1') then 
@@ -55,16 +49,19 @@ class GameWindow < Gosu::Window
 	if Input.triggered?(:'2') then 
 		@beta=create(@beta,Tile,28,25,0,[:heart]*8,0xFFFF2222,:horizontal)
 	end
-	if Input.triggered?(:'3') then
+	if Input.ready?(:'3') then
 		@gamma=create(@gamma,Frame,27,23,10,5,0,0xFFFF0000,rand([:heart,:fill,:double,:single,:box,:face_full,:face_empty,:ring]))
 	end
-	if Input.triggered?(:'4') and not @delta then
-		@delta=create(@delta,TextInput,28,26,'Text',7)
+	if Input.triggered?(:'4') then
+		@delta=create(@delta,Text,2,10,'Press e to edit this text')
 	end
-	if Input.triggered?(:' ') then
-		Handler.remove(@alpha,@beta,@gamma,@delta)
+	if Inputable.input.include?(:E) and Input.triggered?(:E) and @delta then
+		@phi=create(@phi,TextInput,@delta)
+	end		
+	if Inputable.input.include?(:' ') and Input.triggered?(:' ') then
+		Handler.remove(@alpha,@beta,@gamma,@delta,@phi)
 	end
-
+	
 	@update_time=Gosu::milliseconds()-start #benchmark end
   end
   

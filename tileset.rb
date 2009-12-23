@@ -2,7 +2,7 @@ require 'gosu'
 
 class Tileset < Gosu::Image
   SYMBOLS = [
-    :null, #empty
+    :border, # 1px border around edges
     :face_empty, #transparent face
     :face_full, #full face
     :heart, #heart
@@ -35,7 +35,7 @@ class Tileset < Gosu::Image
     :triangle_up, # up triangle
     :triangle_down, #down triangle
 
-    :" ", #empty
+    :" ", #empty, space
     :"!", # !
     :'"', # "
     :"#", # #

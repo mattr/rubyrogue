@@ -120,20 +120,18 @@ module Inputable
 			alias :inputable_old_new new
 			def new(*args,&block)
 				instance=inputable_old_new(*args,&block)
-				Inputable::handlers << instance
+				Inputable::handlers.unshift(instance) #this puts the instance in front of the queue
 				return instance
 			end
 		end
 	end
 	
 	def self.handle(instance) #handle the keyboard input
-		instance.triggers=@input[1]&instance.class::TRIGGERS # compare triggers, save ones that match
-		@input[1]-=instance.triggers # 'claim' the used triggers
-		@input[0].each_pair do |key,value| #controls are hashes: {key => number of ticks pressed}
-			if instance.class::CONTROLS.include?(key) then
-				if instance.controls[key] then instance.controls[key]+=1 #if the key exists, increment the value
-				else instance.controls[key]=value end #otherwise create a new key
-				@input[0].delete(key) #'claim' the key
+		instance.keys.clear #reset the instance's list of keys first
+		instance.class::KEYS.each do |key|
+			if @input.include?(key) then
+					instance.keys << key
+					@input.delete(key)
 			end
 		end
 	end

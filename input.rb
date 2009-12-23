@@ -5,7 +5,7 @@ include Interface
 
 # This class is responsible for reading pressed keys and tracking them
 module Input
-	class << self; attr_accessor :active, :triggered end
+	class << self; attr_accessor :keys end
 	DELAY = 150 # milliseconds
 	ALL_KEYS = {
     :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
@@ -91,108 +91,118 @@ module Input
   ARROWS=[:left,:right,:up,:down]
   PAGE_CONTROLS=[:home,:end,:pageup,:pagedown]
   FUNCTION=[:F1,:F2,:F3,:F4,:F5,:F6,:F7,:F8,:F9,:F10,:F11,:F12]
-    @active= {}
-    @triggered=[]
+    @keys= {} #store pressed and released keys like this: :key => value or :released
+    # where value means the number of ticks it's been pressed for and :released means the key's been released
 	
-	def self.read(window)
-	@triggered.clear
-	ALL_KEYS.each do |symbol, keys|
-		is_pressed = keys.inject(false){|pressed, key| window.button_down?(key) or pressed}
-		if is_pressed then
-			if @active[symbol] then
-				@active[symbol] += 1
-			else
-				@active[symbol] = 0
-				@triggered << symbol
+	# @keys hash is populated with active keys, which can have one of those states:
+	# : (the first tick it is pressed down), :down (
+	def self.read_keys(window)
+		
+	ALL_KEYS.each do |symbol, keys| #iterate through all known symbols
+		is_pressed = keys.inject(false){|pressed, key| window.button_down?(key) or pressed} #there can be multiple keys for each symbol
+		if is_pressed then # the key is being pressed
+			if @keys.key?(symbol) then @keys[symbol]+=1 #it already is being tracked, so just increment
+			else @keys[symbol]=0 end # not tracked, add it
+		else # the key is not pressed (released previous tick or not pressed at all)
+			if @keys.key?(symbol) then # we are only concerned with keys that were still active last tick
+				if not @keys[symbol]==:released then @keys[symbol]=:released #set the key as released
+				else @keys.delete(symbol) #the key has no business being in the hash anymore
+				end
 			end
-		else
-			@active.delete(symbol)
 		end
 	end
-	return [@active,@triggered]
+	return @keys.keys
 	end
 
-	def self.triggered?(key)
-		@triggered.include?(key)
+	def self.released?(key) # only return true if the key was pressed last tick and is not pressed anymore
+		if @keys.include?(key) and @keys[key]==:released then return true
+		else return false end
 	end
 	
-	def self.is_pressed?(key)
-		if (@active.include?(key) and @active[key]>=60*DELAY/1000) or @triggered.include?(key) then
-			@active[key]=0
-			return true
-		else
-			return false
-		end
+	def self.is_down?(key) #returns true if the key is pressed, regardless of DELAY
+		if @keys.include?(key) and not @keys[key]==:released then return true
+		else return false end
+	end
+	
+	def self.triggered?(key) #only the first keypress is counted
+		if @keys.include?(key) and @keys[key]==0 then return true
+		else return false end
+	end
+	
+	def self.ready?(key) #continuous keypress, trigger in intervals based on DELAY
+		if is_down?(key) and @keys[key]%(60*DELAY/1000)==0 then return true
+		else return false end
+	end
+	
+	def self.life(key) #returns the duration key's pressed in ticks
+		if is_down?(key) then return @keys[key] end
 	end
 end
 
 	# This class handles entering text; the object would remain until either of control keys (esc, enter) is pressed, then closes and returns the value)
 class TextInput
-	attr_accessor :content, :x, :y, :limit, :triggers, :controls
+	attr_accessor :keys
 	include Updatable
 	include Drawable
 	include Inputable
-	TRIGGERS=[:enter, :esc, :ins, :home, :end] #single keypress
-	CONTROLS=Input::ALPHANUMERIC+[:left,:right,:backspace,:delete] #continuous keypress
-	def initialize(x,y,text='',length=64)
-		@default=text
-		@x = x
-		@y = y
-		@content=text.split('').collect{|s| s.intern}
-		@limit=length
-		@cursor=text.length
+	KEYS=Input::ALPHANUMERIC+[:left,:right,:backspace,:delete,:enter, :esc, :ins, :home, :end, :shift]
+	def initialize(instance)
+		@default_text=instance.content.dup
+		@instance=instance
+		@cursor=instance.content.length
 		@mode=:insert # :insert or :replace, based on Insert key, insert by default
-		@triggers=[]
-		@controls={}
+		@keys=[]
 	end
 	
 	def update
-		#below code is deprecated
-		#~ if Input.triggered?(:esc) then return [:cancel,@default]
-		#~ elsif Input.triggered?(:enter) then return [:ok,@content.join]
-		#~ else 
-			#~ if Input.is_pressed?(:left) and (@cursor)>0 then @cursor-=1
-			#~ elsif Input.is_pressed?(:right) and @cursor<@content.length and @cursor<@limit then @cursor+=1
-			#~ elsif Input.is_pressed?(:delete) then @content.delete_at(@cursor)
-			#~ elsif Input.is_pressed?(:backspace) and not @content.empty? then 
-				#~ @content.delete_at(@cursor-1)
-				#~ if @cursor>0 then @cursor-=1 end
-			#~ else
-				#~ Input::ALPHANUMERIC.each {|letter| 
-					#~ if Input.is_pressed?(letter) then 
-						#~ if @cursor<@content.length and @content.length<@limit then 
-							#~ if Input::ALPHABET.include?(letter) then
-								#~ if Input.active.include?(:shift) then @content.insert(@cursor,letter)
-								#~ else @content.insert(@cursor,letter.to_s.downcase.intern) end
-							#~ else
-								#~ @content.insert(@cursor,letter)
-								#~ @cursor+=1
-							#~ end
-						#~ elsif @content.length<@limit then 
-							#~ if Input::ALPHABET.include?(letter) then
-								#~ if Input.active.include?(:shift) then @content << letter
-								#~ else @content << letter.to_s.downcase.intern end
-							#~ else
-								#~ @content << letter
-							#~ end
-							#~ @cursor+=1
-						#~ else
-							#~ if Input::ALPHABET.include?(letter) then
-								#~ if Input.active.include?(:shift) then @content[@cursor]=letter
-								#~ else @content[@cursor]=letter.to_s.downcase.intern end
-							#~ else @content[@cursor]=letter
-							#~ end
-						#~ end
-					#~ end }
-			#~ end
-			#~ return [:pending,@content.join]
-		#~ end		
+		if @keys.include?(:esc) then 
+			@instance.content=@default_text
+			self.remove
+		elsif @keys.include?(:enter) then 
+			self.remove
+		elsif @keys.include?(:ins) then
+			if @mode==:insert then @mode=:replace else @mode=:insert end
+		elsif @keys.include?(:home) then @cursor=0
+		elsif @keys.include?(:end) then @cursor=@instance.content.length
+		#the above are triggers, only single keypresses; below can be continuous
+		else
+			# left and right cursor stuff
+			if @keys.include?(:left) and Input.ready?(:left) and @cursor>0 then @cursor-=1 end
+			if @keys.include?(:right) and Input.ready?(:right) and @cursor<@instance.content.length then @cursor+=1 end
+			if @keys.include?(:delete) and Input.ready?(:delete) and @cursor<@instance.content.length then 
+				@instance.content[@cursor]='' 
+				end
+			if @keys.include?(:backspace) and Input.ready?(:backspace) and @cursor>0 then
+				@instance.content[@cursor-1]=''
+				@cursor-=1 
+				end
+			#now we get to actually type!
+			@keys.each do |key|
+				if (Input::NUMBERS.include?(key) or key==:' ') and Input.ready?(key) then
+					if @mode==:insert then #insert a letter and then increment the cursor
+						@instance.content.insert(@cursor,key.to_s)
+						@cursor+=1
+					else   #replace the current letter
+						@instance.content[@cursor]=key.to_s
+					end
+				elsif Input::ALPHABET.include?(key) and Input.ready?(key) then
+					if @mode==:insert then
+						if @keys.include?(:shift) then @instance.content.insert(@cursor,key.to_s)
+						else @instance.content.insert(@cursor,key.to_s.downcase) end
+						@cursor+=1
+					else
+						if @keys.include?(:shift) then @instance.content[@cursor]=key.to_s
+						else @instance.content[@cursor]=key.to_s.downcase end
+					end
+				else #do nothing?
+				end
+			end
+		end
+		if @cursor>@instance.content.length then @cursor=@instance.content.length end
 	end
 	
 	def draw
-		#also deprecated
-		#~ if (not @content.empty?) then Interface::draw_tiles(@x,@y,0,@content) end
-		#~ if (Gosu::milliseconds()%500>100) then Interface::draw_tiles(@x+@cursor,@y,1,:fill100,0x88FFFF00) end
+		Interface::draw_tiles(@instance.x+@cursor,@instance.y,0,:border,0x88FFFF33)
 	end
 	
 	def remove
