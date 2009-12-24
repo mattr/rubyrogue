@@ -3,8 +3,37 @@ require 'display'
 require 'handler'
 include Interface
 
+module Keys # LOCAL - use these methods instead of ones supplied by Input!
+	
+	def self.triggered?(instance,key)
+		if instance.keys.include?(key) and Input.triggered?(key) then return true
+		else return false end
+	end
+	
+	def self.is_down?(instance,key)
+		if instance.keys.include?(key) and Input.is_down?(key) then return true
+		else return false end
+	end
+	
+	def self.ready?(instance,key)
+		if instance.keys.include?(key) and Input.ready?(key) then return true
+		else return false end
+	end
+	
+	def self.released?(instance,key) # be careful using this one, as it can be affected on global scale!
+		if Input.released?(key) then return true
+		else return false end
+	end
+
+	def self.life(instance,key)
+		if instance.keys.include?(key) then return Input.life(key)
+		else return nil end
+	end
+
+end
+
 # This class is responsible for reading pressed keys and tracking them
-module Input
+module Input # GLOBAL - do not use if not absolutely necessary!
 	class << self; attr_accessor :keys end
 	DELAY = 150 # milliseconds
 	ALL_KEYS = {
@@ -155,24 +184,24 @@ class TextInput
 	end
 	
 	def update
-		if @keys.include?(:esc) then 
+		if Keys.triggered?(self,:esc) then 
 			@instance.content=@default_text
 			self.remove
-		elsif @keys.include?(:enter) then 
+		elsif Keys.triggered?(self,:enter) then 
 			self.remove
-		elsif @keys.include?(:ins) then
+		elsif Keys.triggered?(self,:ins) then
 			if @mode==:insert then @mode=:replace else @mode=:insert end
-		elsif @keys.include?(:home) then @cursor=0
-		elsif @keys.include?(:end) then @cursor=@instance.content.length
+		elsif Keys.triggered?(self,:home) then @cursor=0
+		elsif Keys.triggered?(self,:end) then @cursor=@instance.content.length
 		#the above are triggers, only single keypresses; below can be continuous
 		else
 			# left and right cursor stuff
-			if @keys.include?(:left) and Input.ready?(:left) and @cursor>0 then @cursor-=1 end
-			if @keys.include?(:right) and Input.ready?(:right) and @cursor<@instance.content.length then @cursor+=1 end
-			if @keys.include?(:delete) and Input.ready?(:delete) and @cursor<@instance.content.length then 
+			if Keys.ready?(self,:left) and @cursor>0 then @cursor-=1 end
+			if Keys.ready?(self,:right) and @cursor<@instance.content.length then @cursor+=1 end
+			if Keys.ready?(self,:delete) and @cursor<@instance.content.length then 
 				@instance.content[@cursor]='' 
 				end
-			if @keys.include?(:backspace) and Input.ready?(:backspace) and @cursor>0 then
+			if Keys.ready?(self,:backspace) and @cursor>0 then
 				@instance.content[@cursor-1]=''
 				@cursor-=1 
 				end
@@ -187,11 +216,11 @@ class TextInput
 					end
 				elsif Input::ALPHABET.include?(key) and Input.ready?(key) then
 					if @mode==:insert then
-						if @keys.include?(:shift) then @instance.content.insert(@cursor,key.to_s)
+						if Keys.is_down?(self,:shift) then @instance.content.insert(@cursor,key.to_s)
 						else @instance.content.insert(@cursor,key.to_s.downcase) end
 						@cursor+=1
 					else
-						if @keys.include?(:shift) then @instance.content[@cursor]=key.to_s
+						if Keys.is_down?(self,:shift) then @instance.content[@cursor]=key.to_s
 						else @instance.content[@cursor]=key.to_s.downcase end
 					end
 				else #do nothing?

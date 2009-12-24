@@ -26,6 +26,7 @@ class GameWindow < Gosu::Window
     super(1024, 768, 0)
     self.caption="Generic title"
     @tileset=Tileset.new(self)
+    @keys=[]
     Interface::tileset=@tileset
     @update_time=0
     @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
@@ -41,26 +42,17 @@ class GameWindow < Gosu::Window
 	
 	Inputable.input=Input::read_keys(self) #needs to come before Inputable.do!
 	Inputable.do! #should come before Updatable::do!
+	@keys=Inputable.input
 	Updatable::do!
 	
-	if Input.triggered?(:'1') then 
-		@alpha=create(@alpha,Text,28,24,"Ho ho ho")
-	end
-	if Input.triggered?(:'2') then 
-		@beta=create(@beta,Tile,28,25,0,[:heart]*8,0xFFFF2222,:horizontal)
-	end
-	if Input.ready?(:'3') then
-		@gamma=create(@gamma,Frame,27,23,10,5,0,0xFFFF0000,rand([:heart,:fill,:double,:single,:box,:face_full,:face_empty,:ring]))
-	end
-	if Input.triggered?(:'4') then
-		@delta=create(@delta,Text,2,10,'Press e to edit this text')
-	end
-	if Inputable.input.include?(:E) and Input.triggered?(:E) and @delta then
-		@phi=create(@phi,TextInput,@delta)
-	end		
-	if Inputable.input.include?(:' ') and Input.triggered?(:' ') then
-		Handler.remove(@alpha,@beta,@gamma,@delta,@phi)
-	end
+	if Keys.triggered?(self,:'1') then @alpha=create(@alpha,Text,28,24,"Ho ho ho") end
+	if Keys.triggered?(self,:'2') then @beta=create(@beta,Tile,28,25,0,[:heart]*8,0xFFFF2222,:horizontal) end
+	if Keys.ready?(self,:'3') then @gamma=create(@gamma,Frame,27,23,10,5,0,0xFFFF0000,rand([:heart,:fill,:double,:single,:box,:face_full,:face_empty,:ring])) end
+	if Keys.triggered?(self,:'4') then @delta=create(@delta,Text,2,10,'Press e to edit this text') end
+	if Keys.triggered?(self,:E) and @delta then @phi=create(@phi,TextInput,@delta)	end		
+	if Keys.triggered?(self,:' ') then Handler.remove(@alpha,@beta,@gamma,@delta,@phi) end
+	
+	close if Keys.triggered?(self,:esc)
 	
 	@update_time=Gosu::milliseconds()-start #benchmark end
   end
