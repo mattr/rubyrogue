@@ -5,6 +5,7 @@
 # 
 require 'gosu'
 require 'handler'
+require 'input'
 
 module Interface
 	class << self; attr_accessor :tileset end
@@ -85,6 +86,7 @@ class Frame
 	attr_accessor :state, :x, :y, :width, :height, :z, :color, :type, :tileset
 	include Drawable
 	# order: topleft corner, topright corner, bottomright corner, bottomleft corner, horizontal, vertical
+	puts "FRAME_DOUBLE"
 	FRAME_DOUBLE=[:table_topleft_double,:table_topright_double,:table_bottomright_double,:table_bottomleft_double,:table_horizontal_double,:table_vertical_double]
 	FRAME_SINGLE=[:table_topleft_single,:table_topright_single, :table_bottomright_single,:table_bottomleft_single, :table_horizontal_single, :table_vertical_single]
 	
@@ -121,5 +123,47 @@ class Frame
 	
 	def remove
 		Drawable::remove(self)
+	end
+end
+
+class Camera
+  attr_reader :x1, :x2, :y1, :x2, :x, :y, :width, :height # showing off aside, there's no reason to not make those actual instance vars
+  
+  def initialize(x, y, width, height)
+    @x, @y, @width, @height = x, y, width, height
+    @x1, @y1 = x-@width/2, y-@height/2
+    @x2, @y2 = @x1+@width-1, @y1+@height-1
+  end
+  
+  def x=(new_x)
+    @x1 += new_x-@x
+    @x2 += new_x-@x
+    @x = new_x
+  end
+  
+  def y=(new_y)
+    @y1 += new_y-@y
+    @y2 += new_y-@y
+    @y = new_y
+  end
+
+  def width=(new_width)
+    @width = new_width
+    @x1, @x2 = x-@width/2, @x1+@width-1
+  end
+  
+  def height=(new_height)
+    @height = new_height
+    @y1, @y2 = y-@height/2, @y1+@height-1
+  end
+end
+
+class Viewport
+	attr_accessor :x, :y, :width,:height,:mode, :camera
+	include Drawable
+	include Updatable
+	
+	def initialize(screen_x,screen_y,width,height,camera=nil)
+		
 	end
 end
