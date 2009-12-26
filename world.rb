@@ -19,6 +19,7 @@ class World
 		@seed=seed
 		@map=Array.new(@width){Array.new(@height){0}}
 		SimplexNoise.seed(@seed)
+    # load values
 		@width.times do |i|
 			@height.times do |j|
 				# Octave 1: Grain
@@ -29,16 +30,22 @@ class World
 				# Octave 3: Streak
 				value+=SimplexNoise.noise(i,j*100)*0.7
 				#Adjust range to [0,1]
-				value=(value+1)*0.5
-				#Convert noise
-        if value < 0 then @map[i][j]=[:' ',0xFF000000]
-        elsif value > 0 and value <= 0.2 then @map[i][j]=[:fill100,0xFF333333]
-        elsif value > 0.2 and value <= 0.4 then @map[i][j]=[:fill100,0xFF666666]
-        elsif value > 0.4 and value <= 0.6 then @map[i][j]=[:fill100, 0xFF999999]
-        elsif value > 0.6 and value <=0.8 then @map[i][j]=[:fill100,0xFFCCCCCC]
-        else @map[i][j]=[:fill100,0xFFFFFFFF] end
+				value=value/6+0.5
+        @map[i][j]=value
 			end
 		end
+    # boost contrast
+    base_min = @map.collect{|row| row.min}.min
+    base_max = @map.collect{|row| row.max}.max
+    @map.each{|row| row.collect!{|cell| (cell-base_min)/(base_max-base_min)}}
+    # actually make it a map
+    @width.times do |i|
+			@height.times do |j|
+        shade = (255*@map[i][j]).to_i
+        @map[i][j] = [:fill100, Gosu::Color.new(shade, shade, shade)]
+			end
+		end
+    
 	end
 	
 	def update
