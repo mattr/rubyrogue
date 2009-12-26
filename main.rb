@@ -5,10 +5,10 @@ require 'tileset'
 require 'cut' # various snippets such as the new rand()
 require 'noise'
 require 'handler'
+require 'world'
 
   include Interface
   include Math
-  include Noise
   include Handler
 
 class GameWindow < Gosu::Window
@@ -32,8 +32,8 @@ class GameWindow < Gosu::Window
     @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
     @cursor_x=0
     @cursor_y=0
-    @debug1=create(@debug1,Text,0,0,"Press  ,  ,   or   to show stuff,       to remove them all",0xFFFFFF22)
-    @debug2=create(@debug2,Text,0,0,"      1  2  3    4                Space",0xFF22FFFF)
+    @debug1=create(@debug1,Text,0,0,"Press 1 to generate world map",0xFFFFFF22)
+    @seed=0
   end
   
   
@@ -45,12 +45,10 @@ class GameWindow < Gosu::Window
 	@keys=Inputable.input
 	Updatable::do!
 	
-	if Keys.triggered?(self,:'1') then @alpha=create(@alpha,Text,28,24,"Ho ho ho") end
-	if Keys.triggered?(self,:'2') then @beta=create(@beta,Tile,28,25,0,[:heart]*8,0xFFFF2222,:horizontal) end
-	if Keys.ready?(self,:'3') then @gamma=create(@gamma,Frame,27,23,10,5,0,0xFFFF0000,rand([:heart,:fill,:double,:single,:box,:face_full,:face_empty,:ring])) end
-	if Keys.triggered?(self,:'4') then @delta=create(@delta,Text,2,10,'Press e to edit this text') end
-	if Keys.triggered?(self,:E) and @delta then @phi=create(@phi,TextInput,@delta)	end		
-	if Keys.triggered?(self,:' ') then Handler.remove(@alpha,@beta,@gamma,@delta,@phi) end
+	if Keys.triggered?(self,:'1') then 
+		if @debug1 then @debug1.remove end
+		@world=create(@world,World,64,64,@seed+=1)
+	end
 	
 	close if Keys.triggered?(self,:esc)
 	
@@ -63,6 +61,8 @@ class GameWindow < Gosu::Window
 	start = Gosu::milliseconds() #benchmark start
 	
 	Drawable::do!
+	
+	if @world then Interface::draw_map(0,0,64,48,@world.map) end
 	
 	#draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
 	#draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)

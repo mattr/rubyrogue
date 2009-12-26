@@ -17,5 +17,9 @@ class Object
 	def clamp(min, value, max)
 		return (min>value ? min : (value>max ? max : value))
 	end
+	
+	def lerp(x, y, a)
+		return (1-a)*x + a*y
+	end
 
 end

@@ -5,7 +5,6 @@
 # 
 require 'gosu'
 require 'handler'
-require 'input'
 
 module Interface
 	class << self; attr_accessor :tileset end
@@ -28,11 +27,10 @@ module Interface
 		string.length.times {|i| @tileset[string[i]].draw((x+i)*16,y*16,1,1,1,color)}
 	end
 	
-	def draw_buffer(x,y,width,height,buffer,off_x=0,off_y=0)
-		#draw the array contents; use off_x and off_y to offset buffer coordinates (i.e. draw only a part of the buffer)
-		height.times do |j|
-			width.times do |i|
-				draw_tiles(x+i,y+j,0,buffer[i+off_x][j+off_y][0],buffer[i+off_x][j+off_y][1])
+	def draw_map(x,y,width,height,map,map_x=0,map_y=0) #specially for drawing the game map; the map contains a visible symbol and a color
+		width.times do |i|
+			height.times do |j|
+				draw_tiles(x+i,y+j,0,map[i+map_x][j+map_y][0],map[i+map_x][j+map_y][1])
 			end
 		end
 	end
@@ -86,7 +84,6 @@ class Frame
 	attr_accessor :state, :x, :y, :width, :height, :z, :color, :type, :tileset
 	include Drawable
 	# order: topleft corner, topright corner, bottomright corner, bottomleft corner, horizontal, vertical
-	puts "FRAME_DOUBLE"
 	FRAME_DOUBLE=[:table_topleft_double,:table_topright_double,:table_bottomright_double,:table_bottomleft_double,:table_horizontal_double,:table_vertical_double]
 	FRAME_SINGLE=[:table_topleft_single,:table_topright_single, :table_bottomright_single,:table_bottomleft_single, :table_horizontal_single, :table_vertical_single]
 	
@@ -127,6 +124,7 @@ class Frame
 end
 
 class Camera
+	include Updatable
   attr_reader :x1, :x2, :y1, :x2, :x, :y, :width, :height # showing off aside, there's no reason to not make those actual instance vars
   
   def initialize(x, y, width, height)
@@ -156,6 +154,9 @@ class Camera
     @height = new_height
     @y1, @y2 = y-@height/2, @y1+@height-1
   end
+  
+  def update
+  end
 end
 
 class Viewport
@@ -163,7 +164,18 @@ class Viewport
 	include Drawable
 	include Updatable
 	
-	def initialize(screen_x,screen_y,width,height,camera=nil)
+	def initialize(screen_x,screen_y,camera) #needs Camera instance!
 		
+	end
+	
+	def update
+	end
+	
+	def draw		
+	end
+	
+	def remove
+		Updatable::remove(self)
+		Drawable::remove(self)
 	end
 end
