@@ -4,31 +4,27 @@ require 'handler'
 require 'gosu'
 
 class World
-	include Updatable
-	# Builds and manages game areas and locations
-	# Order of scale: World > Region > Area > Tile/Node
-	attr_accessor :width, :height, :seed, :map, :global
-	@width=16
-	@height=16
-	@seed=0
-	@global=[] #processed fractal noise
-  @map=[] #world map converted from noise
-	
-	def initialize(width=16,height=16,seed=0)
-		@width=width
-		@height=height
-		@seed=seed
+  include Updatable
+  # Builds and manages game areas and locations
+  # Order of scale: World > Region > Area > Tile/Node
+  attr_accessor :width, :height, :seed, :map, :global
+  @width, @height = 16,16
+  @seed = 0
+  @global = [] #processed fractal noise
+  @map = [] #world map converted from noise
+  
+  def initialize(width=16, height=16, seed=0)
+    @width, @height, @seed = width, height, seed
     create_world()
     # load values
-    
-	end
+  end
   
   def translate(map) #return an array of symbols and colors for display purposes
-    array=Array.new(map.length){Array.new(map[0].length,0)}
-    map.length.times do |i|
-      map[i].length.times do |j|
-        shade=((255*map[i][j]).to_i)
-        array[i][j]=[:fill, Gosu::Color.new(shade,shade,shade)]
+    array=Array.new(map.length){Array.new(map[0].length, 0)}
+    map.length.times do |j|
+      map[j].length.times do |i|
+        shade = ((255*map[j][i]).to_i)
+        array[j][i] = [:fill, Gosu::Color.new(shade,shade,shade)]
       end
     end
     return array
@@ -44,25 +40,25 @@ class World
     #~ persists=[0,0.5,0.25] #only need three octaves for now
     #~ offsets=Array.new(3,[0,0])
     srand(@seed)
-    noise=Array.new(@width){Array.new(@height){rand}} # intitial noise
+    noise = Array.new(@width){Array.new(@height){rand}} # intitial noise
     srand
-    @global=Array.new(@width){Array.new(@height,0.0)}
+    @global = Array.new(@width){Array.new(@height, 0.0)}
     # First octave
-    FractalNoise.octave(3,1,@global,noise,@width,@height,0.333,[0,0],[true,false])
+    FractalNoise.octave(3, 1, @global, noise, @width, @height, 0.333, [0,0], [true,false])
     #Second octave
-    FractalNoise.octave(3,2,@global,noise,@width,@height,0.1,[0,0],[true,false])
+    FractalNoise.octave(3, 2, @global, noise, @width, @height, 0.1, [0,0], [true,false])
     #Third octave
     #~ FractalNoise.octave(3,3,@global,noise,@width,@height,0.125,[0,0])
     
     boost_constract(@global)
-    @map=translate(@global)
+    @map = translate(@global)
   end
-	
-	def update
-		#placeholder
-	end
-	
-	def remove
-		Updatable::remove(self)
-	end
+  
+  def update
+    #placeholder
+  end
+  
+  def remove
+    Updatable::remove(self)
+  end
 end

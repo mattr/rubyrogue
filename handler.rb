@@ -3,19 +3,20 @@ module Handler
 
 #sample syntax: @var=create(@var,Text,x,y,"Actual text",color)
   def create(*args, &block)
-	if args[0] then args[0].remove end
-	return args[1].new(*args[2..-1], &block)
+    args[0].remove if args[0]
+    return args[1].new(*args[2..-1], &block)
   end
 
   def self.clear #this clears all drawable and updatable instances from the handlers
-	Drawable.instances.clear
-	Updatable.instances.clear
+    Drawable.instances.clear
+    Updatable.instances.clear
   end
 
   def self.remove(*args) #remove selected instances
-	args.each {|item| if item then item.remove end}
+    args.each {|item| item.remove if item}
   end
 end
+
 module Sorted # this is an inefficient implementation (n^2 rather than log(n)), but it works
   DEFAULT_PREDICATE = Proc.new{|x, y| x[1] <=> y[1]}
 
@@ -104,39 +105,39 @@ end
 
 # passes input to input handlers, effectively filtering it
 module Inputable
-	class << self; attr_accessor :handlers, :input end
-	@handlers=[]
-	@input=[]
-	
-	def self.do!
-		@handlers.each do |handler|
-		handle(handler)
-		break if @input.empty?
-		end
-	end
-	
-	def self.included(base)
-		class << base
-			alias :inputable_old_new new
-			def new(*args,&block)
-				instance=inputable_old_new(*args,&block)
-				Inputable::handlers.unshift(instance) #this puts the instance in front of the queue
-				return instance
-			end
-		end
-	end
-	
-	def self.handle(instance) #handle the keyboard input
-		instance.keys.clear #reset the instance's list of keys first
-		instance.class::KEYS.each do |key|
-			if @input.include?(key) then
-					instance.keys << key
-					@input.delete(key)
-			end
-		end
-	end
-	
-	def self.remove(obj)
-		@handlers.delete(obj)
-	end
+  class << self; attr_accessor :handlers, :input end
+  @handlers = []
+  @input = []
+  
+  def self.do!
+    @handlers.each do |handler|
+      handle(handler)
+      break if @input.empty?
+    end
+  end
+  
+  def self.included(base)
+    class << base
+      alias :inputable_old_new new
+      def new(*args, &block)
+        instance=inputable_old_new(*args, &block)
+        Inputable::handlers.unshift(instance) #this puts the instance in front of the queue
+        return instance
+      end
+    end
+  end
+  
+  def self.handle(instance) #handle the keyboard input
+    instance.keys.clear #reset the instance's list of keys first
+    instance.class::KEYS.each do |key|
+      if @input.include?(key) then
+        instance.keys << key
+        @input.delete(key)
+      end
+    end
+  end
+  
+  def self.remove(obj)
+    @handlers.delete(obj)
+  end
 end
