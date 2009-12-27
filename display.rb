@@ -31,8 +31,8 @@ module Interface
   end
   
   def draw_map(x, y, width, height, map, map_x=0, map_y=0) #specially for drawing the game map; the map contains a visible symbol and a color
-    horiz = [width, map.length+map_x].min #in case of drawing outside map bounds
-    vert = [height, map[0].length+map_y].min
+    horiz = [width, map[0].length+map_x].min #in case of drawing outside map bounds
+    vert = [height, map.length+map_y].min
     vert.times do |j|
       horiz.times do |i|
         draw_tiles(x+i, y+j, 0, map[j+map_y][i+map_x][0], map[j+map_y][i+map_x][1])
@@ -130,7 +130,7 @@ class Camera
     if @active then
       @height.times do |j|
         @width.times do |i|
-          @view[j][i]=@target[j+@y][i+@x]
+          @view[j][i]=@target[(j+@y1) % @target.length][(i+@x1) % @target[0].length]
           end
       end
     end
@@ -173,7 +173,7 @@ class Viewport
   
   def initialize(screen_x, screen_y, camera) #needs camera to work with
     @x=screen_x
-    @y=screen_x
+    @y=screen_y
     @camera=camera
     @width=@camera.width
     @height=@camera.height

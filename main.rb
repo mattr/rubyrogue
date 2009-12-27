@@ -49,14 +49,14 @@ class GameWindow < Gosu::Window
       @debug1.remove if @debug1
       @seed += 1
       @world = create(@world, World, 32, 32, @seed)
-      @camera=create(@camera, Camera, 0, 0, 15, 15, @world.map)
+      @camera=create(@camera, Camera, 0, 0, 20, 10, @world.map)
       @view=create(@view, Viewport,33,1,@camera)
     end
     
     @camera.x -= 1 if Keys.ready?(self, :left) and @camera.x>0
-    @camera.x+= 1 if Keys.ready?(self, :right) and @camera.x<(@world.map.length-@camera.width)
+    @camera.x+= 1 if Keys.ready?(self, :right) and @camera.x<(@world.map[0].length)
     @camera.y-= 1 if Keys.ready?(self, :up) and @camera.y>0
-    @camera.y+= 1 if Keys.ready?(self, :down) and @camera.y<(@world.map[0].length-@camera.height)
+    @camera.y+= 1 if Keys.ready?(self, :down) and @camera.y<(@world.map.length)
     
     close if Keys.triggered?(self,:esc)
     
@@ -69,6 +69,7 @@ class GameWindow < Gosu::Window
     Drawable::do!
     
     Interface::draw_map(0,0,@world.map.length,@world.map[0].length,@world.map) if @world
+    Interface::draw_tiles(@camera.x,@camera.y,1,:face_full,0xFFFFFF66) if @camera
     
     # draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
     # draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
