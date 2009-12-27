@@ -29,7 +29,6 @@ class GameWindow < Gosu::Window
     @keys=[]
     Interface::tileset=@tileset
     @update_time=0
-    @buffer=Array.new(128){Array.new(128){[:fill100,0xFF333333]}}
     @cursor_x=0
     @cursor_y=0
     @debug1=create(@debug1,Text,0,0,"Press 1 to generate world map",0xFFFFFF22)
@@ -47,7 +46,7 @@ class GameWindow < Gosu::Window
 	
 	if Keys.triggered?(self,:'1') then 
 		if @debug1 then @debug1.remove end
-		@world=create(@world,World,100,100,@seed+=1)
+		@world=create(@world,World,40,40,@seed+=1)
 	end
   
   if Keys.ready?(self,:left) and @cursor_x>0 then @cursor_x-=1 end

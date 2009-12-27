@@ -70,11 +70,13 @@ module DiamondSquareNoise
 end
   
 module FractalNoise
-  def self.octave(octaves, octave, base, noise, width, height, persistence, offset)
+  def self.octave(octaves, octave, base, noise, width, height, persistence, offset,tilable=[true,true])
     return nil if persistence == 0
     coord_offset = octaves-octave
-    wrap_x ,wrap_y =[width >> coord_offset, 1].max, [height >> coord_offset, 1].max # where in noise we need to wrap around
+    wrap_x, wrap_y = [width >> coord_offset, 1].max, [height >> coord_offset, 1].max # where in noise we need to wrap around
     step_x, step_y = width.to_f/wrap_x, height.to_f/wrap_y # adjust stepping
+    wrap_x = tilable[0] ? [width >> coord_offset, 1].max : width
+    wrap_y = tilable[1] ? [height >> coord_offset, 1].max : height
     height.times do |j|
       cy = offset[1]+j.to_f/step_y
       coef_y = cy-cy.floor
