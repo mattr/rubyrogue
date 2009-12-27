@@ -30,6 +30,7 @@ class GameWindow < Gosu::Window
     Interface::tileset=@tileset
     @update_time, @cursor_x, @cursor_y = 0, 0, 0
     @debug1=create(@debug1, Text, 0, 0, "Press 1 to generate world map", 0xFFFFFF22)
+    @debug2=create(@debug2, Text, 1, 47,  '',0xFFAAAAAA)
     @seed=0
   end
     
@@ -41,16 +42,21 @@ class GameWindow < Gosu::Window
     @keys = Inputable.input
     Updatable::do!
     
+    # shows the value at camera coordinates
+    @debug2.content='['+@camera.x.to_s+','+@camera.y.to_s+'] = '+@world.global[@camera.y][@camera.x].to_s if @world
+    
     if Keys.triggered?(self, :'1') then 
       @debug1.remove if @debug1
       @seed += 1
-      @world = create(@world, World, 40, 40, @seed)
+      @world = create(@world, World, 32, 32, @seed)
+      @camera=create(@camera, Camera, 0, 0, 15, 15, @world.map)
+      @view=create(@view, Viewport,33,1,@camera)
     end
     
-    @cursor_x -= 1 if Keys.ready?(self, :left) and @cursor_x>0
-    @cursor_x += 1 if Keys.ready?(self, :right) and @cursor_x<(@world.map.length-WIDTH)
-    @cursor_y -= 1 if Keys.ready?(self, :up) and @cursor_y>0
-    @cursor_y += 1 if Keys.ready?(self, :down) and @cursor_y<(@world.map[0].length-HEIGHT)
+    @camera.x -= 1 if Keys.ready?(self, :left) and @camera.x>0
+    @camera.x+= 1 if Keys.ready?(self, :right) and @camera.x<(@world.map.length-@camera.width)
+    @camera.y-= 1 if Keys.ready?(self, :up) and @camera.y>0
+    @camera.y+= 1 if Keys.ready?(self, :down) and @camera.y<(@world.map[0].length-@camera.height)
     
     close if Keys.triggered?(self,:esc)
     
@@ -62,7 +68,7 @@ class GameWindow < Gosu::Window
     
     Drawable::do!
     
-    if @world then Interface::draw_map(0, 0, WIDTH, HEIGHT, @world.map, @cursor_x, @cursor_y) end
+    Interface::draw_map(0,0,@world.map.length,@world.map[0].length,@world.map) if @world
     
     # draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
     # draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)

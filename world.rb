@@ -44,9 +44,9 @@ class World
     srand
     @global = Array.new(@width){Array.new(@height, 0.0)}
     # First octave
-    FractalNoise.octave(3, 1, @global, noise, @width, @height, 0.333, [0,0], [true,false])
+    FractalNoise.octave(3, 1, @global, noise, @width, @height, 0.5, [0,0], [true,false])
     #Second octave
-    FractalNoise.octave(3, 2, @global, noise, @width, @height, 0.1, [0,0], [true,false])
+    FractalNoise.octave(3, 2, @global, noise, @width, @height, 0.15, [0,0], [true,false])
     #Third octave
     #~ FractalNoise.octave(3,3,@global,noise,@width,@height,0.125,[0,0])
     

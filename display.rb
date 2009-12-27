@@ -33,8 +33,8 @@ module Interface
   def draw_map(x, y, width, height, map, map_x=0, map_y=0) #specially for drawing the game map; the map contains a visible symbol and a color
     horiz = [width, map.length+map_x].min #in case of drawing outside map bounds
     vert = [height, map[0].length+map_y].min
-    horiz.times do |i|
-      vert.times do |j|
+    vert.times do |j|
+      horiz.times do |i|
         draw_tiles(x+i, y+j, 0, map[j+map_y][i+map_x][0], map[j+map_y][i+map_x][1])
       end
     end
@@ -114,12 +114,26 @@ end
 
 class Camera
   include Updatable
-  attr_reader :x1, :x2, :y1, :x2, :x, :y, :width, :height # showing off aside,  there's no reason to not make those actual instance vars
+  attr_reader :x1, :x2, :y1, :x2, :x, :y, :width, :height, :view, :target, :active # showing off aside,  there's no reason to not make those actual instance vars
   
-  def initialize(x,  y,  width,  height)
+  def initialize(x,  y,  width,  height, map)
     @x, @y, @width, @height = x, y, width, height
     @x1, @y1 = x-@width/2, y-@height/2
     @x2, @y2 = @x1+@width-1, @y1+@height-1
+    @target=map # what camera is looking at
+    @view=Array.new(@height){Array.new(@width,[:' ',0x00000000])}#what the camera sees
+    @active=true
+    record()
+  end
+  
+  def record()
+    if @active then
+      @height.times do |j|
+        @width.times do |i|
+          @view[j][i]=@target[j+@y][i+@x]
+          end
+      end
+    end
   end
   
   def x=(new_x)
@@ -145,25 +159,33 @@ class Camera
   end
   
   def update
+    record()
+  end
+  
+  def remove
+    Updatable::remove(self)
   end
 end
 
 class Viewport
   attr_accessor :x, :y, :width, :height, :mode,  :camera
   include Drawable
-  include Updatable
   
-  def initialize(screen_x, screen_y, camera) #needs Camera instance!
+  def initialize(screen_x, screen_y, camera) #needs camera to work with
+    @x=screen_x
+    @y=screen_x
+    @camera=camera
+    @width=@camera.width
+    @height=@camera.height
   end
   
-  def update
-  end
-  
-  def draw    
+  def draw
+    if @camera.active then
+      Interface::draw_map(@x,@y,@width,@height,@camera.view)
+    end
   end
   
   def remove
-    Updatable::remove(self)
     Drawable::remove(self)
   end
 end
