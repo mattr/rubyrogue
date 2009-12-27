@@ -70,32 +70,27 @@ module DiamondSquareNoise
 end
   
 module FractalNoise
-	def self.octave(octaves, octave, base, noise, width, height, persistence)
-		return nil if persistence == 0
-		coord_offset = octaves-octave
-		wrap_x ,wrap_y =[width >> coord_offset, 1].max, [height >> coord_offset, 1].max # where in noise we need to wrap around
-		step_x, step_y = width.to_f/wrap_x, height.to_f/wrap_y # adjust stepping
-		height.times do |j|
-			cy = j.to_f/step_y
-			coef_y = cy-cy.floor
-			y0 = ((cy-1) % wrap_y).floor
-			y1 = cy.floor
-			width.times do |i|
-				cx = i.to_f/step_x
-				coef_x = cx-cx.floor
-				x0 = ((cx-1) % wrap_x).floor
-				x1 = cx.floor
-				top = lerp(noise[y0][x0], noise[y0][x1], coef_x)
-				bottom = lerp(noise[y1][x0], noise[y1][x1], coef_x)
-				base[j][i] += lerp(top, bottom, coef_y)*persistence
-			end
-		end
-	end
-	def self.noise(width,height,seed) # return an array populated with random 0-1.0
-		srand(seed)
-		return Array.new(width){Array.new(height){rand}}
-		srand
-	end
+  def self.octave(octaves, octave, base, noise, width, height, persistence, offset)
+    return nil if persistence == 0
+    coord_offset = octaves-octave
+    wrap_x ,wrap_y =[width >> coord_offset, 1].max, [height >> coord_offset, 1].max # where in noise we need to wrap around
+    step_x, step_y = width.to_f/wrap_x, height.to_f/wrap_y # adjust stepping
+    height.times do |j|
+      cy = offset[1]+j.to_f/step_y
+      coef_y = cy-cy.floor
+      y0 = ((cy-1) % wrap_y).floor
+      y1 = cy.floor
+      width.times do |i|
+        cx = offset[0]+i.to_f/step_x
+        coef_x = cx-cx.floor
+        x0 = ((cx-1) % wrap_x).floor
+        x1 = cx.floor
+        top = lerp(noise[y0][x0], noise[y0][x1], coef_x)
+        bottom = lerp(noise[y1][x0], noise[y1][x1], coef_x)
+        base[j][i] += lerp(top, bottom, coef_y)*persistence
+      end
+    end
+  end
 end
 
 module SimplexNoise

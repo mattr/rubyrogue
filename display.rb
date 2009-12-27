@@ -28,8 +28,10 @@ module Interface
 	end
 	
 	def draw_map(x,y,width,height,map,map_x=0,map_y=0) #specially for drawing the game map; the map contains a visible symbol and a color
-		width.times do |i|
-			height.times do |j|
+    horiz=[width,map.length+map_x].min #in case of drawing outside map bounds
+    vert=[height,map[0].length+map_y].min
+    horiz.times do |i|
+			vert.times do |j|
 				draw_tiles(x+i,y+j,0,map[i+map_x][j+map_y][0],map[i+map_x][j+map_y][1])
 			end
 		end

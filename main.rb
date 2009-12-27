@@ -47,8 +47,13 @@ class GameWindow < Gosu::Window
 	
 	if Keys.triggered?(self,:'1') then 
 		if @debug1 then @debug1.remove end
-		@world=create(@world,World,6,@seed+=1)
+		@world=create(@world,World,100,100,@seed+=1)
 	end
+  
+  if Keys.ready?(self,:left) and @cursor_x>0 then @cursor_x-=1 end
+  if Keys.ready?(self,:right) and @cursor_x<(@world.map.length-64) then @cursor_x+=1 end
+  if Keys.ready?(self,:up) and @cursor_y>0 then @cursor_y-=1 end
+  if Keys.ready?(self,:down) and @cursor_y<(@world.map[0].length-48) then @cursor_y+=1 end
 	
 	close if Keys.triggered?(self,:esc)
 	
@@ -62,7 +67,7 @@ class GameWindow < Gosu::Window
 	
 	Drawable::do!
 	
-	if @world then Interface::draw_map(0,0,@world.map.length,@world.map[0].length,@world.map) end
+	if @world then Interface::draw_map(0,0,64,48,@world.map,@cursor_x,@cursor_y) end
 	
 	#draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
 	#draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
