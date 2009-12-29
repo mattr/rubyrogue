@@ -114,7 +114,7 @@ end
 
 class Camera
   include Updatable
-  attr_reader :x1, :x2, :y1, :x2, :x, :y, :width, :height, :view, :target, :active # showing off aside,  there's no reason to not make those actual instance vars
+  attr_accessor :x1, :x2, :y1, :x2, :x, :y, :width, :height, :view, :target, :active # showing off aside,  there's no reason to not make those actual instance vars
   
   def initialize(x,  y,  width,  height, map)
     @x, @y, @width, @height = x, y, width, height

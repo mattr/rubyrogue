@@ -32,6 +32,7 @@ class GameWindow < Gosu::Window
     @debug1=create(@debug1, Text, 0, 0, "Press 1 to generate world map", 0xFFFFFF22)
     @debug2=create(@debug2, Text, 1, 47,  '',0xFFAAAAAA)
     @seed=0
+    @cursor_x=@cursor_y=0
   end
     
   def update()
@@ -43,20 +44,56 @@ class GameWindow < Gosu::Window
     Updatable::do!
     
     # shows the value at camera coordinates
-    @debug2.content='['+@camera.x.to_s+','+@camera.y.to_s+'] = '+@world.global[@camera.y][@camera.x].to_s if @world
+    @debug2.content='['+@cursor_x.to_s+','+@cursor_y.to_s+'] = '+@world.values[@cursor_y][@cursor_x].to_s if @world
     
     if Keys.triggered?(self, :'1') then 
       @debug1.remove if @debug1
       @seed += 1
       @world = create(@world, World, 32, 32, @seed)
-      @camera=create(@camera, Camera, 0, 0, 20, 10, @world.map)
-      @view=create(@view, Viewport,33,1,@camera)
+      @camera1=create(@camera1, Camera, 0, 0, 10,10, @world.regions[0][0].map)
+      @view1=create(@view1, Viewport,33,1,@camera1)
+      @camera2=create(@camera2, Camera, 0, 0, 10,10, @world.regions[0][1].map)
+      @view2=create(@view2, Viewport,43,1,@camera2)
+      @camera3=create(@camera3, Camera, 0, 0, 10,10, @world.regions[0][2].map)
+      @view3=create(@view3, Viewport,53,1,@camera3)
+      @camera4=create(@camera4, Camera, 0, 0, 10,10, @world.regions[1][0].map)
+      @view4=create(@view4, Viewport,33,11,@camera4)
+      @camera5=create(@camera5, Camera, 0, 0, 10,10, @world.regions[1][1].map)
+      @view5=create(@view5, Viewport,43,11,@camera5)
+      @camera6=create(@camera6, Camera, 0, 0, 10,10, @world.regions[1][2].map)
+      @view6=create(@view6, Viewport,53,11,@camera6)
+      @camera7=create(@camera7, Camera, 0, 0, 10,10, @world.regions[2][0].map)
+      @view7=create(@view7, Viewport,33,21,@camera7)  
+      @camera8=create(@camera8, Camera, 0, 0, 10,10, @world.regions[2][1].map)
+      @view8=create(@view8, Viewport,43,21,@camera8)
+      @camera9=create(@camera9, Camera, 0, 0, 10,10, @world.regions[2][2].map)
+      @view9=create(@view9, Viewport,53,21,@camera9)
     end
     
-    @camera.x -= 1 if Keys.ready?(self, :left) and @camera.x>0
-    @camera.x+= 1 if Keys.ready?(self, :right) and @camera.x<(@world.map[0].length)
-    @camera.y-= 1 if Keys.ready?(self, :up) and @camera.y>0
-    @camera.y+= 1 if Keys.ready?(self, :down) and @camera.y<(@world.map.length)
+    if @world then
+      @cursor_x -= 1 if Keys.ready?(self, :left)
+      @cursor_x+= 1 if Keys.ready?(self, :right)
+      @cursor_y-= 1 if Keys.ready?(self, :up)
+      @cursor_y+= 1 if Keys.ready?(self, :down)
+      @cursor_x=@cursor_x%@world.map[0].length
+      @cursor_y=@cursor_y%@world.map.length
+      #world movement - show regions
+      @world.change_region(:right) if Keys.ready?(self,:right)
+      @world.change_region(:left) if Keys.ready?(self,:left)
+      @world.change_region(:up) if Keys.ready?(self,:up)
+      @world.change_region(:down) if Keys.ready?(self,:down)
+
+      #update camera targets
+      @camera1.target=@world.regions[0][0].map
+      @camera2.target=@world.regions[0][1].map
+      @camera3.target=@world.regions[0][2].map
+      @camera4.target=@world.regions[1][0].map
+      @camera5.target=@world.regions[1][1].map
+      @camera6.target=@world.regions[1][2].map
+      @camera7.target=@world.regions[2][0].map
+      @camera8.target=@world.regions[2][1].map
+      @camera9.target=@world.regions[2][2].map
+    end
     
     close if Keys.triggered?(self,:esc)
     
@@ -68,8 +105,8 @@ class GameWindow < Gosu::Window
     
     Drawable::do!
     
-    Interface::draw_map(0,0,@world.map.length,@world.map[0].length,@world.map) if @world
-    Interface::draw_tiles(@camera.x,@camera.y,1,:face_full,0xFFFFFF66) if @camera
+    Interface::draw_map(0,0,@world.map[0].length,@world.map.length,@world.map) if @world
+    Interface::draw_tiles(@cursor_x,@cursor_y,1,:face_full,0xFFFFFF66) if @world
     
     # draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
     # draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
