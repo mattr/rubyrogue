@@ -112,7 +112,6 @@ module FractalNoise
         top = lerp(noise[y0][x0], noise[y0][x1], coef_x)
         bottom = lerp(noise[y1][x0], noise[y1][x1], coef_x)
         base[j][i] += lerp(top, bottom, coef_y)*persistence
-        #~ base[j][i] += noise[y1][x1]*persistence
       end
     end
   end

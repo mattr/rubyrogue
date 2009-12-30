@@ -122,7 +122,7 @@ module Input # GLOBAL - do not use if not absolutely necessary!
     ALL_KEYS.each do |symbol, keys| #iterate through all known symbols
       is_pressed = keys.inject(false) {|pressed, key| window.button_down?(key) or pressed} #there can be multiple keys for each symbol
       if is_pressed then # the key is being pressed
-        if @keys.key?(symbol) then
+        if @keys.key?(symbol) and not @keys[symbol]==:released then
           @keys[symbol] += 1 #it already is being tracked, so just increment
         else # not tracked, add it
           @keys[symbol] = 0

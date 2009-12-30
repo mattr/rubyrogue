@@ -21,12 +21,32 @@ class World
     # load values
   end
   
-  def translate(map) #return an array of symbols and colors for display purposes
+  def translate(map,gradient=:color) #return an array of symbols and colors for display purposes
     array=Array.new(map.length){Array.new(map[0].length, 0)}
     map.length.times do |j|
       map[j].length.times do |i|
-        shade = ((255*map[j][i]).to_i)
-        array[j][i] = [:fill, Gosu::Color.new(shade,shade,shade)]
+        case gradient
+          when :grayscale
+            shade = ((255*map[j][i]).to_i)
+            array[j][i] = [:fill, Gosu::Color.new(shade,shade,shade)]
+          when :color
+            value=map[j][i]
+            if value < 0.5 then 
+              red=green=0; blue=(255*value).to_i #oceans
+            elsif value >= 0.5 and value < 0.505 then 
+              red=green=(255*value).to_i; blue=0 #coasts
+            elsif value >= 0.505 and value < 0.7 then 
+              red=blue=0; green=(255*value).to_i #lowland
+            elsif value >= 0.7 and value < 0.85 then 
+              red=green=(255*value).to_i; blue=(127)*value.to_i #midlands
+            elsif value >= 0.85 and value <= 1.0 then 
+              red=green=blue=(255*value).to_i #highlands
+            else 
+              red=255;green=blue=0 #error?
+            end
+              
+            array[j][i] = [:fill, Gosu::Color.new(red,green,blue)]
+        end
       end
     end
     return array
@@ -39,12 +59,8 @@ class World
   end
   
   def create_world() #create the world map
-    #~ persists=[0,0.5,0.25] #only need three octaves for now
-    #~ offsets=Array.new(3,[0,0])
     srand(@seed)
     @noise = Array.new(@height){Array.new(@width){rand-0.5}} # intitial noise
-    #~ @noise = Array.new(@height){Array.new(@width){rand}} # intitial noise
-    #~ @noise = Array.new(@height*2){Array.new(@width*2){rand}} # intitial noise
     srand
     @values = Array.new(@height){Array.new(@width, 0.5)}
     
@@ -87,26 +103,6 @@ class World
         #shift array up, create three bottom cells
         @regions.shift
         @regions.push([Region.new(self, current_x-1, current_y+2), Region.new(self, current_x, current_y+2), Region.new(self, current_x+1, current_y+2)])
-      #~ when :left
-        #~ #shift array right, create three left cells
-        #~ @regions[0][2]=@regions[0][1]; @regions[0][1]=@regions[0][0]; @regions[0][0] = Region.new(self,current_x-2,current_y-1)
-        #~ @regions[1][2]=@regions[1][1]; @regions[1][1]=@regions[1][0]; @regions[1][0] = Region.new(self,current_x-2,current_y)
-        #~ @regions[2][2]=@regions[2][1]; @regions[2][1]=@regions[2][0]; @regions[2][0] = Region.new(self,current_x-2,current_y+1)
-      #~ when  :right
-        #~ #shift array left, create three right cells
-        #~ @regions[0][0]=@regions[0][1]; @regions[0][1]=@regions[0][2]; @regions[0][2] = Region.new(self,current_x+2,current_y-1)
-        #~ @regions[1][0]=@regions[1][1]; @regions[1][1]=@regions[1][2]; @regions[1][2] = Region.new(self,current_x+2,current_y)
-        #~ @regions[2][0]=@regions[2][1]; @regions[2][1]=@regions[2][2]; @regions[2][2] = Region.new(self,current_x+2,current_y+1)
-      #~ when :up
-        #~ #shift array down, create three top cells
-        #~ @regions[2][0]=@regions[1][0]; @regions[1][0]=@regions[0][0]; @regions[0][0] = Region.new(self,current_x-1,current_y-2)
-        #~ @regions[2][1]=@regions[1][1]; @regions[1][1]=@regions[0][1]; @regions[0][1] = Region.new(self,current_x,current_y-2)
-        #~ @regions[2][2]=@regions[1][2]; @regions[1][2]=@regions[0][2]; @regions[0][2] = Region.new(self,current_x+1,current_y-2)
-      #~ when :down
-        #~ #shift array up, create three bottom cells
-        #~ @regions[0][0]=@regions[1][0]; @regions[1][0]=@regions[2][0]; @regions[2][0] = Region.new(self,current_x-1,current_y+2)
-        #~ @regions[0][1]=@regions[1][1]; @regions[1][1]=@regions[2][1]; @regions[2][1] = Region.new(self,current_x,current_y+2)
-        #~ @regions[0][2]=@regions[1][2]; @regions[1][2]=@regions[2][2]; @regions[2][2] = Region.new(self,current_x+1,current_y+2)
       when :topleft
         # magic
       when :topright
@@ -135,7 +131,6 @@ class Region
   attr_accessor :width, :height, :x, :y, :map, :values, :elevation
   def initialize(world, x, y, width=8, height=8) #no region can exist without the world instance, duh. Also needs world coordinates.
     @world, @x, @y, @width, @height = world, x, y, width, height
-    #~ @values = Array.new(@height){|j| Array.new(@width, @world.values[@y][@x])}
     @values = Array.new(@height){|j| Array.new(@width, 0)}
     @map = Array.new(@height){Array.new(@width){0}}
     
@@ -145,9 +140,6 @@ class Region
       FractalNoise.octave(1, @values, @world.noise, 0.125, [@x*2, @y*2], [false, false])
       FractalNoise.octave(2, @values, @world.noise, 0.0625, [@x*4, @y*4], [false, false])
       FractalNoise.octave(3, @values, @world.noise, 0.03125, [@x*8, @y*8], [false, false])
-      #~ FractalNoise.octave(2, @values, @world.noise, 0.25, [@x*2, @y*2])
-      #~ FractalNoise.octave(3, @values, @world.noise, 0.0625, [@x*8, @y*8])
-    #~ @world.boost_contrast(@values)
     @map=@world.translate(@values)
 
   end

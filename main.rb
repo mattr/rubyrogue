@@ -48,6 +48,7 @@ class GameWindow < Gosu::Window
     
     if Keys.triggered?(self, :'1') then 
       @debug1.remove if @debug1
+      @cursor_x=@cursor_y=0
       @seed += 1
       cam_x = 8
       cam_y = 8
