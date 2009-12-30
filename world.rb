@@ -32,33 +32,35 @@ class World
     return array
   end
   
-  def boost_constract(base) #rescale everything to (0,1) range
+  def boost_contrast(base, min=0, max=1) #rescale everything to (0, max) range
     base_min = base.collect{|row| row.min}.min
     base_max = base.collect{|row| row.max}.max
-    base.each{|row| row.collect!{|cell| (cell-base_min)/(base_max-base_min)}}
+    base.each{|row| row.collect!{|cell| min+(max-min)*(cell-base_min)/(base_max-base_min)}}
   end
   
   def create_world() #create the world map
     #~ persists=[0,0.5,0.25] #only need three octaves for now
     #~ offsets=Array.new(3,[0,0])
     srand(@seed)
-    @noise = Array.new(@height){Array.new(@width){rand}} # intitial noise
+    @noise = Array.new(@height){Array.new(@width){rand-0.5}} # intitial noise
+    #~ @noise = Array.new(@height){Array.new(@width){rand}} # intitial noise
+    #~ @noise = Array.new(@height*2){Array.new(@width*2){rand}} # intitial noise
     srand
-    @values = Array.new(@height){Array.new(@width, 0.0)}
-    # First octave
-    FractalNoise.octave(3, 1, @values, @noise,  0.5, [0,0], [true,false])
-    #Second octave
-    FractalNoise.octave(3, 2, @values, @noise,  0.25, [0,0], [true,false])
-    #Third octave
-    FractalNoise.octave(3, 3, @values, @noise,  0.125, [0,0], [true,false])
+    @values = Array.new(@height){Array.new(@width, 0.5)}
     
-    boost_constract(@values)
+    octaves = (Math.log([@width, @height].max)/Math.log(2)).to_i
+    #~ octaves = 3
+    octaves.times{|i| FractalNoise.octave(i+1, @values, @noise, 1.0/2**(i+1), [0,0], [true,false])}
+    
+    boost_contrast(@values, 0.125, 0.875)
     @map = translate(@values)
     
     #populate the regions buffer at start
-    @regions=[[Region.new(self,@width-1,@height-1),Region.new(self,0,@height-1),Region.new(self,1,@height-1)],
-    [Region.new(self,@width-1,0),Region.new(self,0,0),Region.new(self,1,0)],
-    [Region.new(self,@width-1,1),Region.new(self,0,1),Region.new(self,1,1)]]
+    @regions = [
+      [Region.new(self, @width-1, @height-1), Region.new(self, 0, @height-1), Region.new(self, 1, @height-1)],
+      [Region.new(self, @width-1, 0), Region.new(self, 0, 0), Region.new(self, 1, 0)],
+      [Region.new(self, @width-1, 1), Region.new(self, 0, 1), Region.new(self, 1, 1)]
+    ]
   end
   
   def change_region(direction)
@@ -67,24 +69,44 @@ class World
     case direction
       when :left
         #shift array right, create three left cells
-        @regions[0][2]=@regions[0][1];@regions[0][1]=@regions[0][0]; @regions[0][0] = Region.new(self,current_x-2,current_y-1)
-        @regions[1][2]=@regions[1][1];@regions[1][1]=@regions[1][0]; @regions[1][0] = Region.new(self,current_x-2,current_y)
-        @regions[2][2]=@regions[2][1];@regions[2][1]=@regions[2][0]; @regions[2][0] = Region.new(self,current_x-2,current_y+1)
-      when  :right
+        3.times do |i|
+          @regions[i].pop
+          @regions[i].unshift(Region.new(self, current_x-2, current_y-1+i))
+        end
+      when :right
         #shift array left, create three right cells
-        @regions[0][0]=@regions[0][1];@regions[0][1]=@regions[0][2]; @regions[0][2] = Region.new(self,current_x+2,current_y-1)
-        @regions[1][0]=@regions[1][1];@regions[1][1]=@regions[1][2]; @regions[1][2] = Region.new(self,current_x+2,current_y)
-        @regions[2][0]=@regions[2][1];@regions[2][1]=@regions[2][2]; @regions[2][2] = Region.new(self,current_x+2,current_y+1)
+        3.times do |i|
+          @regions[i].shift
+          @regions[i].push(Region.new(self, current_x+2, current_y-1+i))
+        end
       when :up
         #shift array down, create three top cells
-        @regions[2][0]=@regions[1][0];@regions[1][0]=@regions[0][0]; @regions[0][0] = Region.new(self,current_x-1,current_y-2)
-        @regions[2][1]=@regions[1][1];@regions[1][1]=@regions[0][1]; @regions[0][1] = Region.new(self,current_x,current_y-2)
-        @regions[2][2]=@regions[1][2];@regions[1][2]=@regions[0][2]; @regions[0][2] = Region.new(self,current_x+1,current_y-2)
+        @regions.pop
+        @regions.unshift([Region.new(self, current_x-1, current_y-2), Region.new(self, current_x, current_y-2), Region.new(self, current_x+1, current_y-2)])
       when :down
         #shift array up, create three bottom cells
-        @regions[0][0]=@regions[1][0];@regions[1][0]=@regions[2][0]; @regions[2][0] = Region.new(self,current_x-1,current_y+2)
-        @regions[0][1]=@regions[1][1];@regions[1][1]=@regions[2][1]; @regions[2][1] = Region.new(self,current_x,current_y+2)
-        @regions[0][2]=@regions[1][2];@regions[1][2]=@regions[2][2]; @regions[2][2] = Region.new(self,current_x+1,current_y+2)
+        @regions.shift
+        @regions.push([Region.new(self, current_x-1, current_y+2), Region.new(self, current_x, current_y+2), Region.new(self, current_x+1, current_y+2)])
+      #~ when :left
+        #~ #shift array right, create three left cells
+        #~ @regions[0][2]=@regions[0][1]; @regions[0][1]=@regions[0][0]; @regions[0][0] = Region.new(self,current_x-2,current_y-1)
+        #~ @regions[1][2]=@regions[1][1]; @regions[1][1]=@regions[1][0]; @regions[1][0] = Region.new(self,current_x-2,current_y)
+        #~ @regions[2][2]=@regions[2][1]; @regions[2][1]=@regions[2][0]; @regions[2][0] = Region.new(self,current_x-2,current_y+1)
+      #~ when  :right
+        #~ #shift array left, create three right cells
+        #~ @regions[0][0]=@regions[0][1]; @regions[0][1]=@regions[0][2]; @regions[0][2] = Region.new(self,current_x+2,current_y-1)
+        #~ @regions[1][0]=@regions[1][1]; @regions[1][1]=@regions[1][2]; @regions[1][2] = Region.new(self,current_x+2,current_y)
+        #~ @regions[2][0]=@regions[2][1]; @regions[2][1]=@regions[2][2]; @regions[2][2] = Region.new(self,current_x+2,current_y+1)
+      #~ when :up
+        #~ #shift array down, create three top cells
+        #~ @regions[2][0]=@regions[1][0]; @regions[1][0]=@regions[0][0]; @regions[0][0] = Region.new(self,current_x-1,current_y-2)
+        #~ @regions[2][1]=@regions[1][1]; @regions[1][1]=@regions[0][1]; @regions[0][1] = Region.new(self,current_x,current_y-2)
+        #~ @regions[2][2]=@regions[1][2]; @regions[1][2]=@regions[0][2]; @regions[0][2] = Region.new(self,current_x+1,current_y-2)
+      #~ when :down
+        #~ #shift array up, create three bottom cells
+        #~ @regions[0][0]=@regions[1][0]; @regions[1][0]=@regions[2][0]; @regions[2][0] = Region.new(self,current_x-1,current_y+2)
+        #~ @regions[0][1]=@regions[1][1]; @regions[1][1]=@regions[2][1]; @regions[2][1] = Region.new(self,current_x,current_y+2)
+        #~ @regions[0][2]=@regions[1][2]; @regions[1][2]=@regions[2][2]; @regions[2][2] = Region.new(self,current_x+1,current_y+2)
       when :topleft
         # magic
       when :topright
@@ -93,7 +115,7 @@ class World
        #even more magic
       when :bottomright
        # last magic
-      end
+    end
   end
   
   def create_region(world_x,world_y)
@@ -111,22 +133,21 @@ end
 
 class Region
   attr_accessor :width, :height, :x, :y, :map, :values, :elevation
-  def initialize(world,x,y,width=10,height=10) #no region can exist without the world instance, duh. Also needs world coordinates.
-    @world=world
-    @x=x
-    @y=y
-    @elevation=@world.values[@y][@x]
-    @width=width
-    @height=height
-    @values=Array.new(@height){Array.new(@width){0}}
-    @map=Array.new(@height){Array.new(@width){0}}
+  def initialize(world, x, y, width=8, height=8) #no region can exist without the world instance, duh. Also needs world coordinates.
+    @world, @x, @y, @width, @height = world, x, y, width, height
+    #~ @values = Array.new(@height){|j| Array.new(@width, @world.values[@y][@x])}
+    @values = Array.new(@height){|j| Array.new(@width, 0)}
+    @map = Array.new(@height){Array.new(@width){0}}
     
     # First octave - we use the world map values as the foundation; using 6-th persistence (1/64)
-      FractalNoise.octave(8, 6, @values, @world.values,  (1.0/64), [@x,@y], [false,false])
+      FractalNoise.octave(0, @values, @world.values, 1, [@x+0.5, @y+0.5], [false, false])
     #Second octave
-      FractalNoise.octave(8, 7, @values, @world.noise, (1.0/128), [@x,@y], [false,false])
-      FractalNoise.octave(8, 8, @values, @world.noise,  (1.0/256), [@x,@y], [false,false])    
-    @world.boost_constract(@values)
+      FractalNoise.octave(1, @values, @world.noise, 0.125, [@x*2, @y*2], [false, false])
+      FractalNoise.octave(2, @values, @world.noise, 0.0625, [@x*4, @y*4], [false, false])
+      FractalNoise.octave(3, @values, @world.noise, 0.03125, [@x*8, @y*8], [false, false])
+      #~ FractalNoise.octave(2, @values, @world.noise, 0.25, [@x*2, @y*2])
+      #~ FractalNoise.octave(3, @values, @world.noise, 0.0625, [@x*8, @y*8])
+    #~ @world.boost_contrast(@values)
     @map=@world.translate(@values)
 
   end

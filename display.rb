@@ -172,16 +172,13 @@ class Viewport
   include Drawable
   
   def initialize(screen_x, screen_y, camera) #needs camera to work with
-    @x=screen_x
-    @y=screen_y
-    @camera=camera
-    @width=@camera.width
-    @height=@camera.height
+    @x, @y, @camera = screen_x, screen_y, camera
+    @width, @height = @camera.width, @camera.height
   end
   
   def draw
     if @camera.active then
-      Interface::draw_map(@x,@y,@width,@height,@camera.view)
+      Interface::draw_map(@x, @y, @width, @height, @camera.view)
     end
   end
   

@@ -49,25 +49,27 @@ class GameWindow < Gosu::Window
     if Keys.triggered?(self, :'1') then 
       @debug1.remove if @debug1
       @seed += 1
+      cam_x = 8
+      cam_y = 8
       @world = create(@world, World, 32, 32, @seed)
-      @camera1=create(@camera1, Camera, 0, 0, 10,10, @world.regions[0][0].map)
-      @view1=create(@view1, Viewport,33,1,@camera1)
-      @camera2=create(@camera2, Camera, 0, 0, 10,10, @world.regions[0][1].map)
-      @view2=create(@view2, Viewport,43,1,@camera2)
-      @camera3=create(@camera3, Camera, 0, 0, 10,10, @world.regions[0][2].map)
-      @view3=create(@view3, Viewport,53,1,@camera3)
-      @camera4=create(@camera4, Camera, 0, 0, 10,10, @world.regions[1][0].map)
-      @view4=create(@view4, Viewport,33,11,@camera4)
-      @camera5=create(@camera5, Camera, 0, 0, 10,10, @world.regions[1][1].map)
-      @view5=create(@view5, Viewport,43,11,@camera5)
-      @camera6=create(@camera6, Camera, 0, 0, 10,10, @world.regions[1][2].map)
-      @view6=create(@view6, Viewport,53,11,@camera6)
-      @camera7=create(@camera7, Camera, 0, 0, 10,10, @world.regions[2][0].map)
-      @view7=create(@view7, Viewport,33,21,@camera7)  
-      @camera8=create(@camera8, Camera, 0, 0, 10,10, @world.regions[2][1].map)
-      @view8=create(@view8, Viewport,43,21,@camera8)
-      @camera9=create(@camera9, Camera, 0, 0, 10,10, @world.regions[2][2].map)
-      @view9=create(@view9, Viewport,53,21,@camera9)
+      @camera1 = create(@camera1, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1].map)
+      @camera2 = create(@camera2, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][1].map)
+      @camera3 = create(@camera3, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][2].map)
+      @camera4 = create(@camera4, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][0].map)
+      @camera5 = create(@camera5, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1].map)
+      @camera6 = create(@camera6, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][2].map)
+      @camera7 = create(@camera7, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][0].map)
+      @camera8 = create(@camera8, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][1].map)
+      @camera9 = create(@camera9, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][2].map)
+      @view1 = create(@view1, Viewport, 33+cam_x*0, 1+cam_y*0, @camera1)
+      @view2 = create(@view2, Viewport, 33+cam_x*1, 1+cam_y*0, @camera2)
+      @view3 = create(@view3, Viewport, 33+cam_x*2, 1+cam_y*0, @camera3)
+      @view4 = create(@view4, Viewport, 33+cam_x*0, 1+cam_y*1, @camera4)
+      @view5 = create(@view5, Viewport, 33+cam_x*1, 1+cam_y*1, @camera5)
+      @view6 = create(@view6, Viewport, 33+cam_x*2, 1+cam_y*1, @camera6)
+      @view7 = create(@view7, Viewport, 33+cam_x*0, 1+cam_y*2, @camera7)
+      @view8 = create(@view8, Viewport, 33+cam_x*1, 1+cam_y*2, @camera8)
+      @view9 = create(@view9, Viewport, 33+cam_x*2, 1+cam_y*2, @camera9)
     end
     
     if @world then
