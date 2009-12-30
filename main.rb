@@ -53,7 +53,7 @@ class GameWindow < Gosu::Window
       cam_x = 8
       cam_y = 8
       @world = create(@world, World, 128, 128, @seed)
-      @world_camera = create(@world_camera, Camera, @world.width/2, @world.height/2, 32, 32, @world.map)
+      @world_camera = create(@world_camera, Camera, @world.width/2, @world.height/2, 32, 33, @world.map)
       @world_view= create(@world_view, Viewport, 0, 0, @world_camera)
       @camera1 = create(@camera1, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1].map)
       @camera2 = create(@camera2, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][1].map)
@@ -115,11 +115,11 @@ class GameWindow < Gosu::Window
     # abstracted world map
     16.times do |j|
       16.times do |i|
-        Interface::draw_tiles(33+i,26+j,0,:fill,@world.map[j*(@world.height/16)][i*(@world.width/16)][1]) if @world
+        Interface::draw_tiles(33+i,29+j,0,:fill,@world.map[j*(@world.height/16)][i*(@world.width/16)][1]) if @world
       end
     end
     Interface::draw_tiles(16,16,1,:border,0xFFFFFF66) if @world
-    Interface::draw_tiles(33+@cursor_x/(@world.width/16),26+@cursor_y/(@world.height/16),1,:border,0xFFFFFF66) if @world
+    Interface::draw_tiles(33+@cursor_x/(@world.width/16),29+@cursor_y/(@world.height/16),1,:border,0xFFFFFF66) if @world
     
     # draw_frame params: (x,y,width,height,Z, color, style) styles: :double, :single, :solid, :heart
     # draw_tiles params: (x,y,Z, symbol or array of symbols, color, :horizontal or :vertical)
