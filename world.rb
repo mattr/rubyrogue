@@ -29,20 +29,18 @@ class World
     case gradient
       when :color
         gradient=Gradient.new({
-          0 => 0xFF0A054D,
-          0.13 => 0xFF0A054D,
-          0.29 => 0xFF4548F5,
-          0.32 => 0xFFE5E74F,
-          0.4 => 0xFF6EC453,
-          0.45 => 0xFF6EC453,
-          0.55 => 0xFF148D07,
-          0.74 => 0xFF175A10,
-          0.83 => 0xFF453413,
-          0.93 => 0xFF31220C,
+          0 => 0xFF000044,
+          0.29 => 0xFF0000AA,
+          0.31 => 0xFFFFFF00,
+          0.33 => 0xFF00CC00,
+          0.6 => 0xFF003300,
+          0.74 => 0xFF663300,
+          0.83 => 0xFFAAAAAA,
+          0.93 => 0xFF444444,
           0.99 => 0xFFFFFFFF,
           1 => 0xFFFFFFFF
         })
-      when :greyscale
+      when :grayscale
         gradient=Gradient.new({
           0 => 0xFF000000,
           1 => 0xFFFFFFFF
@@ -68,15 +66,18 @@ class World
     @noise = Array.new(@height){Array.new(@width){rand-0.5}} # intitial noise
     srand
     @values = Array.new(@height){Array.new(@width, 0.5)}
-    
     octaves = (Math.log([@width, @height].max)/Math.log(2)).to_i
     #~ octaves = 3
-    octaves.times{|i| FractalNoise.octave(i+1, @values, @noise, 1.0/2**(i+1), [0,0], [true,false])}
+    octaves.times{|i| FractalNoise.octave(i+1, @values, @noise, 1.0/2**(i+1), [0,0], [true, false])}
     
-    boost_contrast(@values, 0.125, 0.875)
+    boost_contrast(@values)
     @map = translate(@values)
     
-    #populate the regions buffer at start
+    #populate the regions and areas buffers at start
+    update_regions
+end
+  
+  def update_regions
     @regions = [
       [Region.new(self, @width-1, @height-1), Region.new(self, 0, @height-1), Region.new(self, 1, @height-1)],
       [Region.new(self, @width-1, 0), Region.new(self, 0, 0), Region.new(self, 1, 0)],
@@ -119,10 +120,6 @@ class World
     end
   end
   
-  def create_region(world_x,world_y)
-  
-  end
-  
   def update
     #placeholder
   end
@@ -142,14 +139,14 @@ class Region
     # First octave - we use the world map values as the foundation; using 6-th persistence (1/64)
       FractalNoise.octave(0, @values, @world.values, 1, [@x+0.5, @y+0.5], [false, false])
     #Second octave
-      FractalNoise.octave(1, @values, @world.noise, 0.125, [@x*2, @y*2], [false, false])
-      FractalNoise.octave(2, @values, @world.noise, 0.0625, [@x*4, @y*4], [false, false])
-      FractalNoise.octave(3, @values, @world.noise, 0.03125, [@x*8, @y*8], [false, false])
+      FractalNoise.octave(1, @values, @world.noise, 0.0625, [@x*2, @y*2], [false, false])
+      FractalNoise.octave(2, @values, @world.noise, 0.03125, [@x*4, @y*4], [false, false])
+      FractalNoise.octave(3, @values, @world.noise, 0.015625, [@x*8, @y*8], [false, false])
     @map=@world.translate(@values)
 
   end
-  
 end
+
 
 module Lighting
   
@@ -170,8 +167,18 @@ module Lighting
     return lightmap
   end
   
-  def self.shade(normal,light)
+  def light_vector(x,y,hour,day)
+    # For time and day, see Time.rb
+    #x,y: our coordinates
+    # hour: hour of the day (height of sun on the sky)
+    # day: day of the year (sun's equatorial offset, inclination), uses -cos(x) formula, with one year as a period (360 days)
     
+    #I dunno how to calculate this *sheepish*
+
+  end
+  
+  def self.project(normal,light)
+    dot(normal,light)[2]
   end
   
   def normalize(x)
