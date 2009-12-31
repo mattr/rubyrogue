@@ -4,8 +4,17 @@
 # GUI (frames,  'selectors' etc.) - context sensitive! 
 # 
 require 'gosu'
-require 'handler'
-require 'cut'
+require './core/handler'
+require './core/misc'
+
+class Tileset < Gosu::Image
+  def Tileset.new(window, filename="cooz_16x16.png", symbols = SYMBOLS, alternate = ALTERNATE_SYMBOLS) # filenames are case sensitive on some OSes
+    tileset_array = Tileset.load_tiles(window, filename, 16, 16, 0)
+    hash = Hash[*symbols.zip(tileset_array).flatten]
+    alternate.each{|key, value| hash[key] = hash[value]}
+    return hash
+  end
+end
 
 module Interface
   class << self; attr_accessor :tileset end
@@ -80,9 +89,6 @@ class Frame
   attr_accessor :state, :x, :y, :width, :height, :z, :color, :type, :tileset
   include Drawable
   # order: topleft corner,  topright corner,  bottomright corner,  bottomleft corner,  horizontal,  vertical
-  FRAME_DOUBLE=[:table_topleft_double, :table_topright_double, :table_bottomright_double, :table_bottomleft_double, :table_horizontal_double, :table_vertical_double]
-  FRAME_SINGLE=[:table_topleft_single, :table_topright_single,  :table_bottomright_single, :table_bottomleft_single, :table_horizontal_single, :table_vertical_single]
-  
   def initialize(x, y, width, height, z=0, color=0xFFFFFFFF, type=:single)
     @x, @y, @z, @width, @height, @color, @type, @state, @tiles = x, y, z, width, height, color, type, :enabled, FRAME_SINGLE
   end

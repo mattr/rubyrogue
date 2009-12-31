@@ -1,4 +1,4 @@
-require 'cut'
+require './core/misc'
 include Math
 
 module DiamondSquareNoise

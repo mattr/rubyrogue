@@ -1,11 +1,10 @@
-require 'cut'
-require 'noise'
 require 'gosu'
-require 'handler'
-require 'display'
-require 'gradient'
 require 'matrix'
-require 'cut'
+require './core/noise'
+require './core/handler'
+require './core/display'
+require './core/gradient'
+require './core/misc'
 
 class World
   include Updatable

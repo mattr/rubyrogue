@@ -1,20 +1,20 @@
 require 'gosu'
-require 'input'
-require 'display'
-require 'tileset'
-require 'cut' # various snippets such as the new rand()
-require 'noise'
-require 'handler'
-require 'world'
+require './core/constants'
+require './core/input'
+require './core/display'
+require './core/misc' # various snippets such as the new rand()
+require './core/noise'
+require './core/handler'
+require './core/world'
+
 
   include Interface
   include Math
   include Handler
 
 class GameWindow < Gosu::Window
-	attr_accessor :keys, :WIDTH, :HEIGHT
+	attr_accessor :keys
 	Background, Base, Foreground, Overlay = *0..3 # Z levels
-	WIDTH, HEIGHT = 64, 48 # width and height in tiles, based on 1024x768 with 16x16 tiles
 	
 # advanced initialization, not really needed now
   #~ def initialize(ini)

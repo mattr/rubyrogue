@@ -1,6 +1,114 @@
-require 'gosu'
+# Window constants
+SCREEN_WIDTH=64 # in tiles
+SCREEN_HEIGHT=48 #in tiles
 
-class Tileset < Gosu::Image
+# Time constants
+  DAYS_PER_YEAR = 360
+  HOURS_PER_DAY = 24
+  MINUTES_PER_HOUR = 60
+  SECONDS_PER_MINUTE = 60
+  DAYS_PER_WEEK = 10
+  # four seasons, ninety days a season, Spring begins on 45th day and ends on 134th day etc., Winter should wrap automatically
+  SEASONS = {:Spring => 45...135, :Summer => 135...225, :Fall => 225...315, :Winter => 315...405}
+  WEEKDAYS = [:Oneday, :Twoday, :Threeday, :Fourday, :Fiveday, :Sixday, :Sevenday, :Eightday, :Nineday, :Tenday]
+  #placeholder month names, 12 months a year, 360/12 = 30 days a month, 3 weeks a month
+  MONTHS = [:First, :Second, :Third, :Fourth, :Fifth, :Sixth, :Seventh, :Eighth, :Ninth, :Tenth, :Eleventh, :Twelfth]
+ 
+# World map constants
+HEIGHT = 0 #first value
+
+# Input constants
+  DELAY = 150 # milliseconds
+  ALL_KEYS = {
+    :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
+    :'1' => [Gosu::Kb1, Gosu::KbNumpad1],
+    :'2' => [Gosu::Kb2, Gosu::KbNumpad2],
+    :'3' => [Gosu::Kb3, Gosu::KbNumpad3],
+    :'4' => [Gosu::Kb4, Gosu::KbNumpad4],
+    :'5' => [Gosu::Kb5, Gosu::KbNumpad5],
+    :'6' => [Gosu::Kb6, Gosu::KbNumpad5],
+    :'7' => [Gosu::Kb7, Gosu::KbNumpad6],
+    :'8' => [Gosu::Kb8, Gosu::KbNumpad7],
+    :'9' => [Gosu::Kb9, Gosu::KbNumpad8],
+    :A => [Gosu::KbA],
+    :B => [Gosu::KbB],
+    :C => [Gosu::KbC],
+    :D => [Gosu::KbD],
+    :E => [Gosu::KbE],
+    :F => [Gosu::KbF],
+    :G => [Gosu::KbG],
+    :H => [Gosu::KbH],
+    :I => [Gosu::KbI],
+    :J => [Gosu::KbJ],
+    :K => [Gosu::KbK],
+    :L => [Gosu::KbL],
+    :M => [Gosu::KbM],
+    :N => [Gosu::KbN],
+    :O => [Gosu::KbO],
+    :P => [Gosu::KbP],
+    :Q => [Gosu::KbQ],
+    :R => [Gosu::KbR],
+    :S => [Gosu::KbS],
+    :T => [Gosu::KbT],
+    :U => [Gosu::KbU],
+    :V => [Gosu::KbV],
+    :W => [Gosu::KbW],
+    :X => [Gosu::KbX],
+    :Y => [Gosu::KbY],
+    :Z => [Gosu::KbZ],
+    :backspace => [Gosu::KbBackspace],
+    :delete => [Gosu::KbDelete],
+    :down => [Gosu::KbDown],
+    :end => [Gosu::KbEnd],
+    :enter => [Gosu::KbEnter],
+    :esc => [Gosu::KbEscape],
+    :F1 => [Gosu::KbF1],
+    :F10 => [Gosu::KbF10],
+    :F11 => [Gosu::KbF11],
+    :F12 => [Gosu::KbF12],
+    :F2 => [Gosu::KbF2],
+    :F3 => [Gosu::KbF3],
+    :F4 => [Gosu::KbF4],
+    :F5 => [Gosu::KbF5],
+    :F6 => [Gosu::KbF6],
+    :F7 => [Gosu::KbF7],
+    :F8 => [Gosu::KbF8],
+    :F9 => [Gosu::KbF9],
+    :home => [Gosu::KbHome],
+    :ins => [Gosu::KbInsert],
+    :left => [Gosu::KbLeft],
+    :'+' => [Gosu::KbNumpadAdd,13],
+    :'/' => [Gosu::KbNumpadDivide],
+    :'*' => [Gosu::KbNumpadMultiply],
+    :'-' => [Gosu::KbNumpadSubtract],
+    :pagedown => [Gosu::KbPageDown],
+    :pageup => [Gosu::KbPageUp],
+    :enter => [Gosu::KbReturn],
+    :right => [Gosu::KbRight],
+    :' ' => [Gosu::KbSpace],
+    :tab => [Gosu::KbTab],
+    :up => [Gosu::KbUp],
+    :click_left => [Gosu::MsLeft],
+    :click_middle => [Gosu::MsMiddle],
+    :click_right => [Gosu::MsRight],
+    :wheel_down => [Gosu::MsWheelDown],
+    :wheel_up => [Gosu::MsWheelUp],
+    :alt => [Gosu::KbRightAlt, Gosu::KbLeftAlt],
+    :ctrl => [Gosu::KbRightControl, Gosu::KbLeftControl],
+    :shift => [Gosu::KbRightShift, Gosu::KbLeftShift]
+  }
+  ALPHABET = ('A'..'Z').to_a.collect{|s| s.intern}
+  NUMBERS = (0..9).to_a.collect{|n| n.to_s.intern}
+  ALPHANUMERIC = ALPHABET+NUMBERS+[:' ']
+  ARROWS = [:left,:right,:up,:down]
+  PAGE_CONTROLS = [:home,:end,:pageup,:pagedown]
+  FUNCTION = [:F1,:F2,:F3,:F4,:F5,:F6,:F7,:F8,:F9,:F10,:F11,:F12]
+  
+# Display constants
+  FRAME_DOUBLE=[:table_topleft_double, :table_topright_double, :table_bottomright_double, :table_bottomleft_double, :table_horizontal_double, :table_vertical_double]
+  FRAME_SINGLE=[:table_topleft_single, :table_topright_single,  :table_bottomright_single, :table_bottomleft_single, :table_horizontal_single, :table_vertical_single]
+
+# Tileset constants
   SYMBOLS = [
     :border, # 1px border around edges
     :face_empty, #transparent face
@@ -212,14 +320,4 @@ class Tileset < Gosu::Image
     :box, # square
     :fill # full fill without border
   ]
-
- 
   ALTERNATE_SYMBOLS = {}
-
-  def Tileset.new(window, filename="cooz_16x16.png", symbols = SYMBOLS, alternate = ALTERNATE_SYMBOLS) # filenames are case sensitive on some OSes
-    tileset_array = Tileset.load_tiles(window, filename, 16, 16, 0)
-    hash = Hash[*symbols.zip(tileset_array).flatten]
-    alternate.each{|key, value| hash[key] = hash[value]}
-    return hash
-  end
-end
