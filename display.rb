@@ -5,6 +5,7 @@
 # 
 require 'gosu'
 require 'handler'
+require 'cut'
 
 module Interface
   class << self; attr_accessor :tileset end
@@ -114,25 +115,45 @@ end
 
 class Camera
   include Updatable
-  attr_accessor :x1, :x2, :y1, :x2, :x, :y, :width, :height, :view, :target, :active # showing off aside,  there's no reason to not make those actual instance vars
+  attr_accessor :x1, :x2, :y1, :x2, :x, :y, :width, :height, :view, :target, :active, :tilable # showing off aside,  there's no reason to not make those actual instance vars
   
-  def initialize(x,  y,  width,  height, map)
-    @x, @y, @width, @height = x, y, width, height
+  def initialize(x,  y,  width,  height, instance, tilable=[true, true])
+    @x, @y, @width, @height, @tilable = x, y, width, height, tilable
     @x1, @y1 = x-@width/2, y-@height/2
     @x2, @y2 = @x1+@width-1, @y1+@height-1
-    @target=map # what camera is looking at
+    @target=instance # what camera is looking at
     @view=Array.new(@height){Array.new(@width,[:' ',0x00000000])}#what the camera sees
     @active=true
-    record()
+    record() if @active
   end
   
   def record()
-    if @active then
-      @height.times do |j|
-        @width.times do |i|
-          @view[j][i]=@target[(j+@y1) % @target.length][(i+@x1) % @target[0].length]
+    @height.times do |j|
+      @width.times do |i|
+          x=i+@x1
+          y=j+@y1
+          if @tilable[0] and @tilable[1] then #wrap both ways
+            @view[j][i]=@target.map[y % @target.height][x % @target.width]
+          elsif @tilable[0] and not @tilable[1] then #wrap horizontally only
+            if y>=0 and y<@target.height then 
+              @view[j][i]=@target.map[y][x % @target.width] 
+            else
+              @view[j][i]=[:' ',0x00000000] #empty square
+            end
+          elsif not @tilable[0] and @tilable[1] then # wrap vertically only
+            if x>=0 and x<@target.width then
+              @view[j][i]=@target.map[y % @target.height][x]
+            else
+              @view[j][i]=[:' ',0x00000000]
+            end
+          else #no wrapping at all
+            if (x>=0 and x<@target.width) and (y>=0 and y<@target.height) then
+              @view[j][i]=@target.map[y][x]
+            else
+              @view[j][i]=[:' ',0x00000000]
+            end
           end
-      end
+        end
     end
   end
   
@@ -159,7 +180,7 @@ class Camera
   end
   
   def update
-    record()
+    record() if @active
   end
   
   def remove

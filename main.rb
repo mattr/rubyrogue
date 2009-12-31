@@ -42,28 +42,41 @@ class GameWindow < Gosu::Window
     Inputable.do! #should come before Updatable::do!
     @keys = Inputable.input
     Updatable::do!
+
+    #~ #update camera targets
+    @camera1.target=@world.regions[0][0] if @camera1
+    @camera2.target=@world.regions[0][1] if @camera2
+    @camera3.target=@world.regions[0][2] if @camera3
+    @camera4.target=@world.regions[1][0] if @camera4
+    @camera5.target=@world.regions[1][1] if @camera5
+    @camera6.target=@world.regions[1][2] if @camera6
+    @camera7.target=@world.regions[2][0] if @camera7
+    @camera8.target=@world.regions[2][1] if @camera8
+    @camera9.target=@world.regions[2][2] if @camera9
     
     # shows the value at camera coordinates
     @debug2.content='['+@cursor_x.to_s+','+@cursor_y.to_s+'] = '+@world.values[@cursor_y][@cursor_x].to_s if @world
     
     if Keys.triggered?(self, :'1') then 
       @debug1.remove if @debug1
-      @cursor_x=@cursor_y=0
       @seed += 1
       cam_x = 8
       cam_y = 8
       @world = create(@world, World, 128, 128, @seed)
-      @world_camera = create(@world_camera, Camera, @world.width/2, @world.height/2, 32, 33, @world.map)
+      @cursor_x=@world.width/2
+      @cursor_y=@world.height/2
+      @world.update_regions(@cursor_x,@cursor_y)
+      @world_camera = create(@world_camera, Camera, @cursor_x, @cursor_y, 32, 32, @world, [true, false])
       @world_view= create(@world_view, Viewport, 0, 0, @world_camera)
-      @camera1 = create(@camera1, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1].map)
-      @camera2 = create(@camera2, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][1].map)
-      @camera3 = create(@camera3, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][2].map)
-      @camera4 = create(@camera4, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][0].map)
-      @camera5 = create(@camera5, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1].map)
-      @camera6 = create(@camera6, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][2].map)
-      @camera7 = create(@camera7, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][0].map)
-      @camera8 = create(@camera8, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][1].map)
-      @camera9 = create(@camera9, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][2].map)
+      @camera1 = create(@camera1, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1])
+      @camera2 = create(@camera2, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][1])
+      @camera3 = create(@camera3, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[0][2])
+      @camera4 = create(@camera4, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][0])
+      @camera5 = create(@camera5, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][1])
+      @camera6 = create(@camera6, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[1][2])
+      @camera7 = create(@camera7, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][0])
+      @camera8 = create(@camera8, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][1])
+      @camera9 = create(@camera9, Camera, cam_x/2, cam_y/2, cam_x, cam_y, @world.regions[2][2])
       @view1 = create(@view1, Viewport, 33+cam_x*0, 1+cam_y*0, @camera1)
       @view2 = create(@view2, Viewport, 33+cam_x*1, 1+cam_y*0, @camera2)
       @view3 = create(@view3, Viewport, 33+cam_x*2, 1+cam_y*0, @camera3)
@@ -76,31 +89,32 @@ class GameWindow < Gosu::Window
     end
     
     if @world then
-      @cursor_x -= 1 if Keys.ready?(self, :left)
-      @cursor_x+= 1 if Keys.ready?(self, :right)
-      @cursor_y-= 1 if Keys.ready?(self, :up)
-      @cursor_y+= 1 if Keys.ready?(self, :down)
-      @cursor_x=@cursor_x%@world.map[0].length
-      @cursor_y=@cursor_y%@world.map.length
-      @world_camera.x=@cursor_x
-      @world_camera.y=@cursor_y
-      #world movement - show regions
-      @world.change_region(:right) if Keys.ready?(self,:right)
-      @world.change_region(:left) if Keys.ready?(self,:left)
-      @world.change_region(:up) if Keys.ready?(self,:up)
-      @world.change_region(:down) if Keys.ready?(self,:down)
-
-      #update camera targets
-      @camera1.target=@world.regions[0][0].map
-      @camera2.target=@world.regions[0][1].map
-      @camera3.target=@world.regions[0][2].map
-      @camera4.target=@world.regions[1][0].map
-      @camera5.target=@world.regions[1][1].map
-      @camera6.target=@world.regions[1][2].map
-      @camera7.target=@world.regions[2][0].map
-      @camera8.target=@world.regions[2][1].map
-      @camera9.target=@world.regions[2][2].map
-    end
+      if Keys.ready?(self, :left) then
+        @cursor_x -= 1
+        @cursor_x=@cursor_x%@world.width
+        @world_camera.x=@cursor_x
+        @world.change_region(:left)
+      end
+      
+      if Keys.ready?(self, :right) then
+        @cursor_x+=1
+        @cursor_x=@cursor_x%@world.width
+        @world_camera.x=@cursor_x
+        @world.change_region(:right)
+      end
+        
+      if Keys.ready?(self, :up) and @cursor_y>1 then
+        @cursor_y-= 1
+        @world_camera.y=@cursor_y
+        @world.change_region(:up)
+      end
+        
+      if Keys.ready?(self, :down) and @cursor_y<@world.height-2 then    
+        @cursor_y+= 1 
+        @world_camera.y=@cursor_y
+        @world.change_region(:down)
+      end
+  end
     
     close if Keys.triggered?(self,:esc)
     

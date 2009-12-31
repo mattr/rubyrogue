@@ -5,6 +5,7 @@ require 'handler'
 require 'display'
 require 'gradient'
 require 'matrix'
+require 'cut'
 
 class World
   include Updatable
@@ -74,20 +75,17 @@ class World
     boost_contrast(@values)
     @map = translate(@values)
     #~ @lightmap=Lighting.lightmap(@values)
-    
-    #populate the regions and areas buffers at start
-    update_regions
 end
   
-  def update_regions
+  def update_regions(x=0,y=0) #load regions at given world coordinates
     @regions = [
-      [Region.new(self, @width-1, @height-1), Region.new(self, 0, @height-1), Region.new(self, 1, @height-1)],
-      [Region.new(self, @width-1, 0), Region.new(self, 0, 0), Region.new(self, 1, 0)],
-      [Region.new(self, @width-1, 1), Region.new(self, 0, 1), Region.new(self, 1, 1)]
+      [Region.new(self, x-1, y-1), Region.new(self, x, y-1), Region.new(self, x+1, y-1)],
+      [Region.new(self, x-1, y), Region.new(self, x, y), Region.new(self, x+1, y)],
+      [Region.new(self, x-1, y+1), Region.new(self, x, y+1), Region.new(self, x+1, y+1)]
     ]
   end
   
-  def change_region(direction)
+  def change_region(direction) #transition between adjacent regions
     current_x=@regions[1][1].x
     current_y=@regions[1][1].y
     case direction
@@ -132,26 +130,33 @@ end
 end
 
 class Region
-  attr_accessor :width, :height, :x, :y, :map, :values, :elevation, :lightmap
+  attr_accessor :width, :height, :x, :y, :map, :values, :elevation, :lightmap, :passable
   def initialize(world, x, y, width=8, height=8) #no region can exist without the world instance, duh. Also needs world coordinates.
     @world, @x, @y, @width, @height = world, x, y, width, height
-    @values = Array.new(@height){|j| Array.new(@width, 0)}
+    @x=@x%@world.width # wrap x-axis
+  
+    fractal_region()
+    if @y>0 and @y<@world.height-1 then
+      @passable=true #non-polar regions are passable
+    else
+      @passable=false #polar regions are passable
+    end
+  end
+  
+  def fractal_region() #an actual region
+    @values = Array.new(@height){Array.new(@width, 0)}
     @map = Array.new(@height){Array.new(@width){0}}
-    
-    # First octave - we use the world map values as the foundation; using 6-th persistence (1/64)
+    # First octave
       FractalNoise.octave(0, @values, @world.values, 1, [@x+0.5, @y+0.5], [false, false])
-    #Second octave
+    #Second octaves
       FractalNoise.octave(1, @values, @world.noise, 0.0625, [@x*2, @y*2], [false, false])
       FractalNoise.octave(2, @values, @world.noise, 0.03125, [@x*4, @y*4], [false, false])
       FractalNoise.octave(3, @values, @world.noise, 0.015625, [@x*8, @y*8], [false, false])
     @map=@world.translate(@values)
-    #~ @lightmap=Lighting.lightmap(@values)
-
   end
 end
 
-
-module Lighting
+module Lighting #not done yet
   
   def self.lightmap(values) #values = height map, lightmap = normals of each tile
     width=values[0].length
