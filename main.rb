@@ -20,13 +20,41 @@ class MainWindow < Gosu::Window
     self.caption="Work in progress."
     @tileset=Tileset.new(self)
     @seed=0
-    @offset=0
+    @heightmap=read_pgm('./images/world.pgm')
   end
-  
-  def draw
+  def read_pgm(filename)
+    array = IO.readlines(filename)
+    header = []
+    while header.length < 3 do
+      line = array.shift.chomp
+      header << line unless line =~ /\A\s*#/
+    end
+    raise "Wrong file type: #{header[0]} instead of P2" unless header[0] == 'P2'
+    width, height = header[1].split(/\s+/).collect{|t| t.to_i}
+    max_value = header[2].to_i
+    raw = array.join.split(/\s+/).collect{|t| t.to_i}
+    unless max_value == 255 then
+      d = (max_value+1)/256
+      raw.collect!{|v| v/d} # scales everything into the 0..255 integer range
+    end
+    matrix = []
+    height.times do |y|
+      matrix << raw[y*width, width]
+    end
+    return matrix
+  end
+
+def draw
     start=Gosu::milliseconds
     Drawable.do!
     
+    48.times do |j|
+     48.times do |i|
+        shade=@heightmap[j*10][i*10]
+        Display.blit(i,j,0,:fill,Gosu::Color.new(shade,shade,shade))
+      end
+    end
+ 
     @draw_time=Gosu::milliseconds-start
   end
   
@@ -41,19 +69,7 @@ class MainWindow < Gosu::Window
     
     ######### Test code begins here
     
-    
-    @offset=(@offset+0.1)%32
-    @map1.offset_x=@map2.offset_x=@offset.to_i if @world
-    
-    if Keys.triggered?(self,:enter) then
-      @seed+=1
-      @world=create(@world,World, 32, 32, @seed)
-      @map1=create(@map1, View, 0, 0, 32, 32, @world.map, 0,0,true,false)
-      @map2=create(@map2, View, 32, 0, 32, 32, @world.heightmap, 0,0,true,false)
-      @text1=create(@text1, Text, 1, 32, 'Color map', 0xFFAAAAAA)
-      @text2=create(@text2, Text, 33, 32, 'Height map', 0xFFAAAAAA)
-      @line=create(@line, Frame, 0, 33, 64, 1, 0, 0xFF888888,:fill100)
-    end
+  
     
     ######## Test code ends here
     

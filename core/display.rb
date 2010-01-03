@@ -27,7 +27,7 @@ module Display
   
   def self.blit_scale(x, y, width=1, height=1, z=0, color=0xFFFFFFFF, style=:fill)
       $game.tileset[style].draw(x*TILE_SIZE[0],y*TILE_SIZE[1], z, width, height, color)
-  end
+    end
 
   def self.blit_map(x, y, width, height, source, offset_x=0, offset_y=0, tilable_x=false, tilable_y=false)
     # x, y : screen coords, width, height: rectangle size, source: map/array, offset: coords within source, tilable: wrapping or not
