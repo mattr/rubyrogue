@@ -7,12 +7,12 @@ module Handler
     return args[1].new(*args[2..-1], &block)
   end
 
-  def self.clear #this clears all drawable and updatable instances from the handlers
+  def self.destroy_all #this removes all updatable and drawable instance references
     Drawable.instances.clear
     Updatable.instances.clear
   end
 
-  def self.remove(*args) #remove selected instances
+  def destroy(*args) #remove selected instances
     args.each {|item| item.remove if item}
   end
 end

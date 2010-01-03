@@ -1,7 +1,3 @@
-# Window constants
-SCREEN_WIDTH=64 # in tiles
-SCREEN_HEIGHT=48 #in tiles
-
 # Time constants
   DAYS_PER_YEAR = 360
   HOURS_PER_DAY = 24
@@ -15,8 +11,46 @@ SCREEN_HEIGHT=48 #in tiles
   MONTHS = [:First, :Second, :Third, :Fourth, :Fifth, :Sixth, :Seventh, :Eighth, :Ninth, :Tenth, :Eleventh, :Twelfth]
  
 # World map constants
-HEIGHT = 0 #first value
+MAP_HEIGHT = 0 #first value (0..1)
+MAP_NORMAL = 1 # surface normal, used for lighting (maybe river generation as well?)
+MAP_TEMP = 2 # contains mean temperature (biased by latitude and height) (0..1)
+MAP_RAIN = 3 # contains mean rainfall (biased by rain shadow?) (0..100)
+MAP_DRAIN = 4 # drainage (how much is water drained into soil) - fractal (0..100)
+MAP_BIOME = 5 # biome, derived from height, temperature, rainfall and drainage parameters
+MAP_FLORA = 6 # vegetation density, may be altered (drought, deforestation etc.)  (0..100)
+MAP_FAUNA = 7 # wildlife density, may be altered (famine, epidemic, overhunting etc.) - (0..100)
+MAP_MISC = 8 # miscelaneous features
 
+BIOMES = [
+  :polar, #ice ice baby
+  :tundra, #cold desert
+  :taiga, #cold, boreal forest
+  :mediteranean, # semi-arid sparse forest, shrubland etc., prone to fires
+  :conifer, # conifer forest
+  :broadleaf, # temperate broadleaf or mixed forests
+  :rainforest, # tropical rainforest aka jungle
+  :grassland, # temperate grasslands and shrublands (prairie, steppe, pampas)
+  :savanna, # tropical grasslands and shrublands (savanna) - semi-arid, semi-humid, low, harsh growth
+  :badland, # very low rainfall, poor biome, high erosion
+  :desert, # temperate or hot desert with no rainfall and almost no growth
+  :floodplain, #normally grassland or such, which gets flooded during rain season, very rich soil
+  :wetland, # swamps, bogs etc., very wet soil, rich biome
+  
+  :riparian, # "river bank" biome, along streams or rivers in any biome
+  :littoral, # littoral zone between land and ocean, tide and stuff
+  :mangrove, #mangrove forest or forest/shrub biome in very shallow sea water or high tide
+  
+  :pond, #stillwater, shallow
+  :lake, # large still freshwater body
+  :stream, # running freshwater
+  :river, #major running freshwater
+  :sea, #shallow sea
+  :kelp, #kelp forest
+  :reef, #coral reef
+  :ocean, #deep ocean
+  :abyss #the deepest and darkest depths
+  ]
+  
 # Input constants
   DELAY = 150 # milliseconds
   ALL_KEYS = {
@@ -107,6 +141,19 @@ HEIGHT = 0 #first value
 # Display constants
   FRAME_DOUBLE=[:table_topleft_double, :table_topright_double, :table_bottomright_double, :table_bottomleft_double, :table_horizontal_double, :table_vertical_double]
   FRAME_SINGLE=[:table_topleft_single, :table_topright_single,  :table_bottomright_single, :table_bottomleft_single, :table_horizontal_single, :table_vertical_single]
+  GRADIENT_GREYSCALE=Gradient.new(0xFF000000,0xFFFFFFFF)
+  GRADIENT_COLOR_MAP=Gradient.new({
+    0 => 0xFF000044,
+    0.40 => 0xFF0000AA,
+    0.405 => 0xFFFFFF00,
+    0.41 => 0xFF00CC00,
+    0.6 => 0xFF003300,
+    0.74 => 0xFF663300,
+    0.83 => 0xFFAAAAAA,
+    0.93 => 0xFF444444,
+    0.99 => 0xFFFFFFFF,
+    1 => 0xFFFFFFFF
+    })
 
 # Tileset constants
   SYMBOLS = [
@@ -302,8 +349,8 @@ HEIGHT = 0 #first value
     :phi,
     :epsilon,
     :union, # flipped U
+    
     :equivalent, # three lines
-
     :plus_minus,
     :more_equal,
     :less_equal,
