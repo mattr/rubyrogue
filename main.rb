@@ -9,6 +9,7 @@ require './core/input'
 require './core/gui'
 require './core/world'
 require './core/noise'
+require './read_pgm'
 
 include Handler
 include Math
@@ -21,40 +22,23 @@ class MainWindow < Gosu::Window
     @tileset=Tileset.new(self)
     @seed=0
     @heightmap=read_pgm('./images/world.pgm')
+    @map=@heightmap.collect{|row| row.collect{|cell| cell=[:fill,(0xFF<<24 | cell<<16 | cell << 8 | cell)]}}
+    @offset_x=0
+    @offset_y=0
+    @zoom=1
   end
-  def read_pgm(filename)
-    array = IO.readlines(filename)
-    header = []
-    while header.length < 3 do
-      line = array.shift.chomp
-      header << line unless line =~ /\A\s*#/
-    end
-    raise "Wrong file type: #{header[0]} instead of P2" unless header[0] == 'P2'
-    width, height = header[1].split(/\s+/).collect{|t| t.to_i}
-    max_value = header[2].to_i
-    raw = array.join.split(/\s+/).collect{|t| t.to_i}
-    unless max_value == 255 then
-      d = (max_value+1)/256
-      raw.collect!{|v| v/d} # scales everything into the 0..255 integer range
-    end
-    matrix = []
-    height.times do |y|
-      matrix << raw[y*width, width]
-    end
-    return matrix
-  end
-
+  
 def draw
     start=Gosu::milliseconds
     Drawable.do!
     
-    48.times do |j|
-     48.times do |i|
-        shade=@heightmap[j*10][i*10]
-        Display.blit(i,j,0,:fill,Gosu::Color.new(shade,shade,shade))
-      end
-    end
- 
+    ######### Test code begin
+  
+    Display.blit_map(0,0,64,48,@map,@offset_x,@offset_y,true,true,@zoom)
+    
+    
+    ######### Test code end
+    
     @draw_time=Gosu::milliseconds-start
   end
   
@@ -69,6 +53,12 @@ def draw
     
     ######### Test code begins here
     
+    @offset_x-=1*@zoom if Keys.ready?(self,:left)
+    @offset_x+=1*@zoom if Keys.ready?(self, :right)
+    @offset_y+=1*@zoom if Keys.ready?(self, :down)
+    @offset_y-=1*@zoom if Keys.ready?(self, :up)
+    @zoom-=1 if Keys.triggered?(self, :'+') and @zoom > 1
+    @zoom+=1 if Keys.triggered?(self, :'-')
   
     
     ######## Test code ends here
