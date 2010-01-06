@@ -21,34 +21,37 @@ MAP_FLORA = 6 # vegetation density, may be altered (drought, deforestation etc.)
 MAP_FAUNA = 7 # wildlife density, may be altered (famine, epidemic, overhunting etc.) - (0..100)
 MAP_MISC = 8 # miscelaneous features
 
-BIOMES = [
-  :polar, #ice ice baby
-  :tundra, #cold desert
-  :taiga, #cold, boreal forest
-  :mediteranean, # semi-arid sparse forest, shrubland etc., prone to fires
-  :conifer, # conifer forest
-  :broadleaf, # temperate broadleaf or mixed forests
-  :rainforest, # tropical rainforest aka jungle
-  :grassland, # temperate grasslands and shrublands (prairie, steppe, pampas)
-  :savanna, # tropical grasslands and shrublands (savanna) - semi-arid, semi-humid, low, harsh growth
-  :badland, # very low rainfall, poor biome, high erosion
-  :desert, # temperate or hot desert with no rainfall and almost no growth
-  :floodplain, #normally grassland or such, which gets flooded during rain season, very rich soil
-  :wetland, # swamps, bogs etc., very wet soil, rich biome
+BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
+  # elevation < 0.25  
+  :water,
   
-  :riparian, # "river bank" biome, along streams or rivers in any biome
-  :littoral, # littoral zone between land and ocean, tide and stuff
-  :mangrove, #mangrove forest or forest/shrub biome in very shallow sea water or high tide
-  
-  :pond, #stillwater, shallow
-  :lake, # large still freshwater body
-  :stream, # running freshwater
-  :river, #major running freshwater
-  :sea, #shallow sea
-  :kelp, #kelp forest
-  :reef, #coral reef
-  :ocean, #deep ocean
-  :abyss #the deepest and darkest depths
+  # elevation >= 0.25 and < 0.75
+  # 0-9 rainfall
+  :sand_desert, # 0-32 drainage
+  :rock_desert,  # 33-49 drainage
+  :badland_a, # 50-65 drainage
+  :badland_b, # 66-100 drainage
+  # 10-19 rainfall
+ :grassland,#0-49 drainage
+ :hills, #50-100 drainage
+ # 20-32 rainfall
+ :savanna, # 0-49 drainage
+ :hills, #50-100 drainage
+ # 33-65 rainfall
+ :marsh, #0-32 drainage
+ :shrubland, #33-49 drainage
+ :hills, # 50-100 drainage
+ #66-100 rainfall
+ :swamp, # 0-32 drainage
+ :forest, # 33-100 drainage
+ # elevation >= 0.75 and < 0.83
+ :low_mountain,
+ # elevation >= 0.83 and < 0.9125
+ :mountain,
+ # elevation >= 0.9125 and < 0.9975
+ :high_mountain,
+ # elevation >= 0.9975
+ :peak
   ]
   
 # Input constants
