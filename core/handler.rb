@@ -12,7 +12,7 @@ module Handler
     Updatable.instances.clear
   end
 
-  def destroy(*args) #remove selected instances
+  def self.destroy(*args) #remove selected instances
     args.each {|item| item.remove if item}
   end
 end

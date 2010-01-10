@@ -42,6 +42,6 @@ class Gradient
     r = ((1-k)*@color_hash[pair[0]].red+k*@color_hash[pair[1]].red).to_i
     g = ((1-k)*@color_hash[pair[0]].green+k*@color_hash[pair[1]].green).to_i
     b = ((1-k)*@color_hash[pair[0]].blue+k*@color_hash[pair[1]].blue).to_i
-    return Gosu::Color.new(a, r, g, b)
+    return (a << 24) + (r << 16) + (g << 8) + b
   end
 end

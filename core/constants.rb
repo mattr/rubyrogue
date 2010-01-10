@@ -11,15 +11,16 @@
   MONTHS = [:First, :Second, :Third, :Fourth, :Fifth, :Sixth, :Seventh, :Eighth, :Ninth, :Tenth, :Eleventh, :Twelfth]
  
 # World map constants
-MAP_HEIGHT = 0 #first value (0..1)
-MAP_NORMAL = 1 # surface normal, used for lighting (maybe river generation as well?)
+MAP_HEIGHT = 0 # height value (0..1)
+MAP_VISIBLE = 1 # a two-element array containing [SYMBOL, COLOR] for drawing on display
 MAP_TEMP = 2 # contains mean temperature (biased by latitude and height) (0..1)
 MAP_RAIN = 3 # contains mean rainfall (biased by rain shadow?) (0..100)
-MAP_DRAIN = 4 # drainage (how much is water drained into soil) - fractal (0..100)
+MAP_DRAIN = 4 # drainage (how much water is drained into soil) - fractal (0..100)
 MAP_BIOME = 5 # biome, derived from height, temperature, rainfall and drainage parameters
-MAP_FLORA = 6 # vegetation density, may be altered (drought, deforestation etc.)  (0..100)
-MAP_FAUNA = 7 # wildlife density, may be altered (famine, epidemic, overhunting etc.) - (0..100)
-MAP_MISC = 8 # miscelaneous features
+MAP_FLORA = 6 # vegetation
+MAP_FAUNA = 7 # wildlife
+MAP_NORMAL = 8 # normals (slopiness)
+MAP_MISC = 9 # miscelaneous features
 
 BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
   # elevation < 0.25  

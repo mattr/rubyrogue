@@ -40,24 +40,24 @@ module Display
           if tilable_x and tilable_y then #wrap both ways
             map_x = (offset_x + i*zoom) % map_width
             map_y = (offset_y + j*zoom) % map_height
-            Display.blit(screen_x,screen_y,0,source[map_y][map_x][0],source[map_y][map_x][1])
+            Display.blit(screen_x,screen_y,0,source[map_y][map_x][MAP_VISIBLE][0],source[map_y][map_x][MAP_VISIBLE][1])
           elsif tilable_x and not tilable_y then #wrap horizontally only
             map_y = offset_y + j*zoom
             if map_y>=0 and map_y<map_height then
               map_x = (offset_x + i*zoom) % map_width
-              Display.blit(screen_x,screen_y,0,source[map_y][map_x][0],source[map_y][map_x][1])
+              Display.blit(screen_x,screen_y,0,source[map_y][map_x][MAP_VISIBLE][0],source[map_y][map_x][MAP_VISIBLE][1])
             end
           elsif not tilable_x and tilable_y then # wrap vertically only
             map_x = offset_x + i*zoom
             if map_x>=0 and map_x < map_width then
               map_y = (offset_y + j*zoom) % map_height
-              Display.blit(screen_x,screen_y,0,source[map_y][map_x][0],source[map_y][map_x][1])              #nope
+              Display.blit(screen_x,screen_y,0,source[map_y][map_x][MAP_VISIBLE][0],source[map_y][map_x][MAP_VISIBLE][1])              #nope
             end
           else #no wrapping at all
             map_x = offset_x + i*zoom
             map_y = offset_y + j*zoom
             if (map_x >= 0 and map_x < map_width) and (map_y >=0 and map_y < map_height) then
-              Display.blit(screen_x,screen_y,0,source[map_y][map_x][0],source[map_y][map_x][1])
+              Display.blit(screen_x,screen_y,0,source[map_y][map_x][MAP_VISIBLE][0],source[map_y][map_x][MAP_VISIBLE][1])
             end
           end
         end

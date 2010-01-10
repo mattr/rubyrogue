@@ -1,30 +1,53 @@
-# world.rb
-
 class World
   include Updatable
-  # Builds and manages game areas and locations
-  # Order of scale: World > Region > Area > Tile/Node
-  attr_accessor :width, :height, :seed, :map, :raw, :regions, :noise, :x, :y
-  @raw = [] # pure height values, scaled to 0.0 - 1.0
-  @map = [] #world map converted from noise
-  @x=@y=0 # current world coordinates
-
+  attr_accessor :width, :height, :seed, :noise, :raw, :regions, :map
   
-  def initialize(random_map=true, width=DEFAULT_WORLD_SIZE[0], height=DEFAULT_WORLD_SIZE[1], seed=DEFAULT_SEED)
-    @width, @height, @seed = width, height, seed
-    @regions=[[nil,nil,nil],[nil,nil,nil],[nil,nil,nil]] # 3x3 array of preloaded regions; current region is always [1][1]
-    case random_map
-      when :random
-        random_world() #create a random world
+  def initialize(type=:random,width=DEFAULT_WORLD_SIZE[0],height=DEFAULT_WORLD_SIZE[1], seed=DEFAULT_SEED)
+    @width,@height,@seed=width,height,seed
+    @virtual_world_size=[@width*DEFAULT_REGION_SIZE[0],@height*DEFAULT_REGION_SIZE[1]]
+    
+    yield 'Starting world generation...' if block_given?
+    # First stage: Create noise map
+    srand(@seed)
+    @noise=Array.new(@height){Array.new(@width){rand}} # For now, just fill it with random numbers)
+    srand
+    yield 'Noise map created.' if block_given?
+    
+    # Second stage: Generate height map
+    case type # the switch prepares @raw array
+      when :flat #simply create a flat world
+        @raw=Array.new(@height){Array.new(@width,0.6)}
+      when :random # do a few octaves of Perlin noise for the world map
+        @raw = Array.new(@height){Array.new(@width){0.5}}
+        octaves = (Math.log([@width, @height].max)/Math.log(2)).to_i
+        octaves.times{|i| FractalNoise.octave(i+1, @raw, @noise, 1.0/2**(i+1), [0,0], [true, false])}
+        constrast_boost(@raw)
       when :file
-        load_world() #load the world from file
-      when :flat
-        flat_world() # placeholder world for testing purposes
+        #placeholder, should load heighmap and use it as the basic for world map
+      end
+    constrast_boost(@raw)
+    yield 'Height map generated.' if block_given?
+      
+    # Third stage: Create displayable map
+    @map=Array.new(@height){Array.new(@width){[nil,[nil,nil]]}}
+    translate_world_map(:color)
+    yield 'Simple world map created.' if block_given?
+
+    # Fourth stage: Create regions
+    @regions=Array.new(@height){Array.new(@width){nil}}
+    @height.times do |y|
+      @width.times do |x|
+        @regions[y][x]=Region.new(self,x,y)
+        yield 'Region '+x.to_s+'x'+y.to_s+' created.' if block_given?
+      end
     end
+    yield 'Regions created.' if block_given?
+    
+    # Fifth stage: Finalize, may add more steps.
+    yield 'World generation completed.' if block_given?
   end
   
-  def translate(map,gradient=:color) #return an array of symbols and colors for display purposes
-    array=Array.new(map.length){Array.new(map[0].length, 0)}
+  def translate_world_map(gradient=:color)
     case gradient
       when :color
         gradient=GRADIENT_COLOR_MAP
@@ -32,136 +55,98 @@ class World
         gradient=GRADIENT_GREYSCALE
     end
     
-    map.length.times do |j|
-      map[j].length.times do |i|
-        array[j][i]=[:fill,gradient.color(map[j][i])]
+    @height.times do |j|
+      @width.times do |i|
+        @map[j][i][MAP_VISIBLE]=[:fill,gradient.color(@raw[j][i])]
       end
     end
-    return array
   end
   
-  def random_world() #create the world map procedurally
-    srand(@seed)
-    @noise = Array.new(@height){Array.new(@width){rand-0.5}} # intitial noise
-    srand
-    @raw = Array.new(@height){Array.new(@width){0.5}}
-    octaves = (Math.log([@width, @height].max)/Math.log(2)).to_i
-    #~ octaves = 3
-    octaves.times{|i| FractalNoise.octave(i+1, @raw, @noise, 1.0/2**(i+1), [0,0], [true, false])}
-    
-    constrast_boost(@raw)
-    @map = translate(@raw)
+  def [](y,x)
+    if y > @virtual_world_size[1]-1 or y < 0 then return nil end #the world doesn't wrap vertically
+    x = x % @virtual_world_size[0] # the world wraps horizontally
+    return @regions[y/DEFAULT_REGION_SIZE[1]][x/DEFAULT_REGION_SIZE[0]][y % DEFAULT_REGION_SIZE[1], x % DEFAULT_REGION_SIZE[0]]
   end
-  
-  def load_world()
-    srand(@seed)
-    # still generate the noise for use by regions
-    @noise = Array.new(@height){Array.new(@width){rand-0.5}}
-    srand
-    File.open('olimea.raw','r+') do |file|
-      @raw = Marshal.load(file) # the file contents should already be scaled to 0..1 !
-    end
-    @map = translate(@raw)    
-  end
-  
-  def flat_world()
-    @noise=[[0.55]*@width]*@height
-    @raw=@noise.dup
-    @map=translate(@raw)
-  end
-  
-  def update_regions(x=0,y=0) #load regions at given world coordinates
-    @regions = [
-      [Region.new(self, x-1, y-1), Region.new(self, x, y-1), Region.new(self, x+1, y-1)],
-      [Region.new(self, x-1, y), Region.new(self, x, y), Region.new(self, x+1, y)],
-      [Region.new(self, x-1, y+1), Region.new(self, x, y+1), Region.new(self, x+1, y+1)]
-    ]
-    @x,@y=x,y
-  end
-  
-  def move(direction) #transition between adjacent regions
-    current_x=@regions[1][1].x
-    current_y=@regions[1][1].y
-    if direction==:left then
-        #shift array right, create three left cells
-        3.times do |i|
-          @regions[i].pop
-          @regions[i].unshift(Region.new(self, current_x-2, current_y-1+i))
-        end
-        @x,@y=@regions[1][1].x,@regions[1][1].y
-    elsif direction==:right then
-      #shift array left, create three right cells
-      3.times do |i|
-        @regions[i].shift
-        @regions[i].push(Region.new(self, current_x+2, current_y-1+i))
-      end
-      @x,@y=@regions[1][1].x,@regions[1][1].y
-    elsif direction==:up  then
-        #shift array down, create three top cells
-        @regions.pop
-        @regions.unshift([Region.new(self, current_x-1, current_y-2), Region.new(self, current_x, current_y-2), Region.new(self, current_x+1, current_y-2)])
-        @x,@y=@regions[1][1].x,@regions[1][1].y
-    else # direction==:down
-        #shift array up, create three bottom cells
-        @regions.shift
-        @regions.push([Region.new(self, current_x-1, current_y+2), Region.new(self, current_x, current_y+2), Region.new(self, current_x+1, current_y+2)])
-        @x,@y=@regions[1][1].x,@regions[1][1].y
-    end
-  end
-  
+
   def update
-    #placeholder
+    # placeholder
   end
   
   def remove
     Updatable::remove(self)
   end
-  
-  def region_left
-    return @regions[1][0]
-  end
-  
-  def region_right
-    return @regions[1][2]
-  end
-  
-  def region_up
-    return @regions[0][1]
-  end
-  
-  def region_down
-    return @regions[2][1]
-  end
-  
-  def region_current
-    return @regions[1][1]
-  end
-  
+
 end
 
 class Region
-  attr_accessor :width, :height, :x, :y, :map, :raw, :elevation, :lightmap, :passable
-  def initialize(world, x, y, width=32, height=32) #no region can exist without the world instance, duh. Also needs world coordinates.
-    @world, @x, @y, @width, @height = world, x, y, width, height
-    @x=@x%@world.width # wrap x-axis
+  attr_accessor :x, :y, :width, :height, :elevation, :map, :raw, :entities, :locals, :visible, :changed, :file
   
-    create()
-    if @y>0 and @y<@world.height-1 then
-      @passable=true #non-polar regions are passable
-    else
-      @passable=false #polar regions are passable
+  def initialize(world, x, y)
+    @world, @x, @y=world, x, y
+    @width, @height = DEFAULT_REGION_SIZE[0], DEFAULT_REGION_SIZE[1]
+    @file="./data/world/region_"+@x.to_s+"_"+@y.to_s+".map" # unique file name
+    @elevation = @world.raw[y][x] # remember the region's elevation level on world
+    @entities = {} # hash containing entities present in the region
+    @locals = {} # hash containing unique locations in the region
+    @visible = false #  the region's maps are not loaded
+    @changed = false # set this flag to true for the map to be saved again (to write changes such as terrain modification)
+    #At some point, implement biomes and stuff here
+    
+    create_map
+    dump_map
+    @visible = false
+  end
+  
+  def create_map #generate @raw and then create @map
+    raw=Array.new(@height){Array.new(@width){@elevation}}
+    # First octave, take the world's height map as guide
+    FractalNoise.octave(0, raw, @world.raw, 1, [@x+0.5, @y+0.5], [false, false])
+    # Other octaves, detail using the world's cached noise
+    FractalNoise.octave(1, raw, @world.noise, 0.0625, [@x*2, @y*2], [false, false])
+    FractalNoise.octave(2, raw, @world.noise, 0.03125, [@x*4, @y*4], [false, false])
+    FractalNoise.octave(3, raw, @world.noise, 0.015625, [@x*8, @y*8], [false, false])
+    
+    @map=Array.new(@height){Array.new(@width){[nil,nil,nil,nil,nil,nil,nil,nil,nil,nil]}}
+    @height.times do |j|
+      @width.times do |i|
+        @map[j][i][MAP_HEIGHT]=raw[j][i]
+        @map[j][i][MAP_VISIBLE]=[:fill,GRADIENT_COLOR_MAP.color(raw[j][i])]
+      end
     end
   end
   
-  def create() #create the region
-    @raw = Array.new(@height){Array.new(@width,0)}
-    @map = []
-    # First octave
-      FractalNoise.octave(0, @raw, @world.raw, 1, [@x+0.5, @y+0.5], [false, false])
-    #Second octaves
-      FractalNoise.octave(1, @raw, @world.noise, 0.0625, [@x*2, @y*2], [false, false])
-      FractalNoise.octave(2, @raw, @world.noise, 0.03125, [@x*4, @y*4], [false, false])
-      FractalNoise.octave(3, @raw, @world.noise, 0.015625, [@x*8, @y*8], [false, false])
-    @map=@world.translate(@raw)
+  def [](y,x)
+    if not @visible then
+      load_map
+      @visible=true
+    end
+    return @map[y][x]
   end
+  
+  def dump_map # save the map to file
+    File.open(@file,'w+') do |file|
+      Marshal.dump(@map, file)
+    end
+  end
+  
+  def load_map # load the map from file
+    File.open(@file,'r+') do |file|
+      @map=Marshal.load(file)
+    end
+    @visible = true
+  end
+  
+  def close_map # clear the map, to conserve the memory, but dump it first if any changes were made
+    if @changed then
+      dump_map
+      @changed = false
+    end
+    @map = nil
+    @visible = false
+  end  
+end
+
+class Local
+
+
 end
