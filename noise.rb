@@ -1,5 +1,4 @@
 # Fractal Noise
-
 module FractalNoise
   def self.octave(octave, base, noise, persistence, offset=[0, 0], tilable=[true, true])
     return nil if persistence == 0
@@ -41,5 +40,55 @@ module FractalNoise
         base[j][i] += lerp(top, bottom, coef_y)*persistence
       end
     end
+  end
+end
+
+class PerlinNoise # single point noise
+  def initialize(seed)
+    @seed = seed
+  end
+
+  def noise(x, y)
+    ([@seed, x, y].hash & 65535) / 65536.0
+  end
+
+  def smooth_noise(x, y)
+    corners = noise(x-1, y-1) + noise(x-1, y+1) + noise(x+1, y-1) + noise(x+1, y+1)
+    sides   = noise(x  , y-1) + noise(x  , y+1) + noise(x-1, y  ) + noise(x+1, y  )
+    center  = noise(x  , y  )
+    center / 4 + sides / 8 + corners / 16
+  end
+
+  def linear_interpolate(a, b, x)
+    a * (1 - x) + b * x
+  end
+
+  def cosine_interpolate(a, b, x)
+    f = (1 - Math.cos(x * Math::PI)) / 2
+    a * (1 - f) + b * f
+  end
+
+  #alias interpolate linear_interpolate
+  alias interpolate cosine_interpolate
+
+  def interpolate_noise(x, y)
+    interpolate(
+      interpolate(
+        smooth_noise(x.floor  , y.floor  ),
+        smooth_noise(x.floor+1, y.floor  ),
+        x - x.floor),
+      interpolate(
+        smooth_noise(x.floor  , y.floor+1),
+        smooth_noise(x.floor+1, y.floor+1),
+        x - x.floor),
+      y - y.floor)
+  end
+
+  def perlin_noise(x, y, octaves=1, persistence=1)
+    (0...octaves).map do |i|
+      frequency = 2.0 ** i
+      amplitude = persistence ** i
+      interpolate_noise(x * frequency, y * frequency) * amplitude
+    end.inject(&:+)
   end
 end

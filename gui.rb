@@ -1,4 +1,4 @@
-#various GUI bits
+#various GUI bits, DEPRECATED
 
 class Text #draw text. Text.new(x,y,string,color)
   attr_accessor :state, :content, :x, :y, :color

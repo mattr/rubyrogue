@@ -1,3 +1,6 @@
+# Identity constants
+  GAME_TITLE = "Ruby Roguelike"
+
 # Time constants
   DAYS_PER_YEAR = 360
   HOURS_PER_DAY = 24
@@ -12,15 +15,13 @@
  
 # World map constants
 MAP_HEIGHT = 0 # height value (0..1)
-MAP_VISIBLE = 1 # a two-element array containing [SYMBOL, COLOR] for drawing on display
-MAP_TEMP = 2 # contains mean temperature (biased by latitude and height) (0..1)
-MAP_RAIN = 3 # contains mean rainfall (biased by rain shadow?) (0..100)
-MAP_DRAIN = 4 # drainage (how much water is drained into soil) - fractal (0..100)
-MAP_BIOME = 5 # biome, derived from height, temperature, rainfall and drainage parameters
-MAP_FLORA = 6 # vegetation
-MAP_FAUNA = 7 # wildlife
-MAP_NORMAL = 8 # normals (slopiness)
-MAP_MISC = 9 # miscelaneous features
+MAP_TEMP = 1 # contains mean temperature (biased by latitude and height) (0..1)
+MAP_RAIN = 2 # contains mean rainfall (biased by rain shadow?) (0..100)
+MAP_DRAIN = 3 # drainage (how much water is drained into soil) - fractal (0..100)
+MAP_BIOME = 4 # biome, derived from height, temperature, rainfall and drainage parameters
+MAP_FLORA = 5 # vegetation
+MAP_FAUNA = 6 # wildlife
+MAP_MISC = 8 # miscelaneous features
 
 BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
   # elevation < 0.25  
@@ -140,7 +141,7 @@ BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
   ALPHANUMERIC = ALPHABET+NUMBERS+[:' ']
   ARROWS = [:left,:right,:up,:down]
   PAGE_CONTROLS = [:home,:end,:pageup,:pagedown]
-  FUNCTION = [:F1,:F2,:F3,:F4,:F5,:F6,:F7,:F8,:F9,:F10,:F11,:F12]
+  FUNCTION_KEYS = [:F1,:F2,:F3,:F4,:F5,:F6,:F7,:F8,:F9,:F10,:F11,:F12]
   
 # Display constants
   FRAME_DOUBLE=[:table_topleft_double, :table_topright_double, :table_bottomright_double, :table_bottomleft_double, :table_horizontal_double, :table_vertical_double]
