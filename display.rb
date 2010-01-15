@@ -65,6 +65,30 @@ module Display
       $game.tileset[text[i].intern].draw((x+a*i)*TILE_SIZE[0], (y+b*i)*TILE_SIZE[1], z, 1, 1, neat_color)
     end
   end
+  
+  def self.blit_frame(x0,y0,x1,y1,z=LAYER_SPRITE, style=:single, color=0xFFFFFFFF)
+    if style == :single then
+      type=FRAME_SINGLE
+    elsif style == :double then
+      type=FRAME_DOUBLE
+    else
+      type=[style]*6
+    end
+    width=x1-x0
+    height=y1-y0
+    (width-1).times do |i|
+      $game.tileset[type[4]].draw((x0+1+i)*TILE_SIZE[0],y0*TILE_SIZE[1],z, 1, 1, color)
+      $game.tileset[type[4]].draw((x0+1+i)*TILE_SIZE[0],y1*TILE_SIZE[1],z, 1, 1, color)
+    end if width > 1
+    (height-1).times do |j|
+      $game.tileset[type[5]].draw(x0*TILE_SIZE[0],(y0+1+j)*TILE_SIZE[1],z, 1, 1, color)
+      $game.tileset[type[5]].draw(x1*TILE_SIZE[0],(y0+1+j)*TILE_SIZE[1],z, 1, 1, color)
+    end if height > 1
+    $game.tileset[type[0]].draw(x0*TILE_SIZE[0],y0*TILE_SIZE[1],z,1,1,color)
+    $game.tileset[type[1]].draw(x1*TILE_SIZE[0],y0*TILE_SIZE[1],z,1,1,color)
+    $game.tileset[type[2]].draw(x1*TILE_SIZE[0],y1*TILE_SIZE[1],z,1,1,color)
+    $game.tileset[type[3]].draw(x0*TILE_SIZE[0],y1*TILE_SIZE[1],z,1,1,color)
+  end
 
   #~ def self.blit_map(x, y, width, height, source, offset_x=0, offset_y=0, tilable_x=false, tilable_y=false, zoom=1)
     #~ # x, y : screen coords, width, height: rectangle size, source: map/array, offset: coords within source, tilable: wrapping or not

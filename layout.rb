@@ -59,20 +59,20 @@ class Title < Layout
   KEYS = [:esc, :up, :down, :enter]
   
   def initialize
-    @keys=[]
+    super
     $game.caption = "Title Layout Test"
     @state = :main #root level
     # buttons
     @b_newgame=Button.new(24,16,"New Game"){ puts "New game pressed"}
-    @b_test1=Button.new(24,17,"Test Layout"){ self.remove; $game.change_layout(Test)}
-    @b_test2=Button.new(24,18,"Test Button Toggle",true){@b_test2.text=(@b_test2.toggled?) ? "Toggled ON" : "Toggled OFF"}
-    @b_quit=Button.new(24,20,"Exit",false){$game.close}
+    @b_test1=Button.new(24,18,"Test Layout"){ self.remove; $game.change_layout(Test)}
+    @b_options=Button.new(24,20,"Options"){ self.remove; $game.change_layout(Options)}
+    @b_quit=Button.new(24,23,"Exit",false){$game.close}
     @hotkeys = {:esc => @b_quit}
     @b_newgame.disable
     @b_newgame.prev = @b_quit; @b_newgame.next = @b_test1
-    @b_test1.prev = @b_newgame; @b_test1.next = @b_test2
-    @b_test2.prev = @b_test1; @b_test2.next = @b_quit
-    @b_quit.prev = @b_test2; @b_quit.next = @b_newgame
+    @b_test1.prev = @b_newgame; @b_test1.next = @b_options
+    @b_options.prev=@b_test1; @b_options.next = @b_quit
+    @b_quit.prev = @b_options; @b_quit.next = @b_newgame
     @current_button=@b_test1; @b_test1.select
     
   end
@@ -88,7 +88,6 @@ class Title < Layout
     GAME_TITLE.length.times do |i|
       Display.blit_rot(5+i*4,3,0,GAME_TITLE[i].intern,0xFFFF0000,0,[4,4])
     end
-    Display.blit_text(1,SCREEN_TILE_HEIGHT-2,1,"Hit ESC to exit, ENTER to test layout change",0xFFAAAAAA) if @state == :main
     Display.blit_line(0,0,SCREEN_TILE_WIDTH,0,0xFFAAAAAA,:fill100)
     Display.blit_line(0,SCREEN_TILE_HEIGHT-1,SCREEN_TILE_WIDTH,0,0xFFAAAAAA,:fill100)
     Display.blit_line(0,1,SCREEN_TILE_HEIGHT-2,0,0xFFAAAAAA,:fill100,false)
@@ -98,6 +97,84 @@ class Title < Layout
   
   def remove
     super
-    Handler.destroy(@b_newgame,@b_test1,@b_test2,@b_quit)
+    Handler.destroy(@b_newgame,@b_test1,@b_options,@b_quit)
   end  
+end
+
+class Options < Layout
+  KEYS = [:esc, :up, :left, :down, :right, :enter, :page_down, :page_up, :end, :home] + ALPHANUMERIC
+  def initialize
+    super
+    $game.caption = "Options"
+    @state = :main
+    init_interface
+    @hotkeys = {:esc => @b_quit}
+  end
+  
+  def init_interface
+    @b_quit = Button.new(1,1,"Return to Title"){ 
+      (@state==:main) ? 
+        (begin self.remove; $game.change_layout(Title) end) : 
+        (begin 
+            @state=:main 
+            @b_game.enable
+            @b_display.enable
+            @b_quit.text="Return to Title"
+          end)}
+    @b_display = Button.new(1,4,"Display Options"){
+      @state= :display
+      @b_display.unselect 
+      @current_button=@b_quit
+      @b_quit.select
+      }
+    @b_game = Button.new(1,5,"Game Options"){
+      @state= :game 
+      @b_game.unselect 
+      @current_button=@b_quit 
+      @b_quit.select
+      }
+    @current_button=@b_display; @b_display.select
+    @b_display.prev=@b_quit; @b_display.next=@b_game
+    @b_game.prev=@b_display;@b_game.next=@b_quit
+    @b_quit.next=@b_display; @b_quit.prev=@b_game
+  end
+  
+  def remove
+    super
+    Handler.destroy(@b_quit,@b_display,@b_game)
+  end
+  
+  def update
+    @hotkeys.each {|key,value| value.action if Keys.triggered?(self,key)}
+    @current_button.action if Keys.triggered?(self,:enter)
+    @current_button=@current_button.next_button if Keys.ready?(self,:down)
+    @current_button=@current_button.prev_button if Keys.ready?(self,:up)
+    
+    if @state != :main then
+      @b_display.disable
+      @b_game.disable
+      @b_quit.text="Cancel"
+    end
+  end
+  
+  def draw
+    if @state == :game then
+      text="No game options available yet"
+      x=32-text.length/2
+      Display.blit_text(x,24,LAYER_TEXT,text, 0xFF0088AA)
+      Display.blit_frame(x-1,23,x+text.length,25,LAYER_TEXT,:single,0xFF0088AA)
+    elsif @state == :display then
+      text="No display options available yet"
+      x=32-text.length/2
+      Display.blit_text(x,24,LAYER_TEXT,text, 0xFF0088AA)
+      Display.blit_frame(x-1,23,x+text.length,25,LAYER_TEXT,:single,0xFF0088AA)
+    else
+      text="Please select appropriate options"
+      x=32-text.length/2
+      Display.blit_text(x,24,LAYER_TEXT,text, 0xFF0088AA)
+      Display.blit_frame(x-1,23,x+text.length,25,LAYER_TEXT,:single,0xFF0088AA)
+    end  
+  end
+  
+
 end
