@@ -6,6 +6,7 @@ require './handler.rb'
 require './display.rb'
 require './input.rb'
 require './layout.rb'
+require './gui.rb'
 
 include Handler
 include Math
@@ -47,6 +48,10 @@ class MainWindow < Gosu::Window
   def change_layout(target)
     if target == @current_layout.class then return nil end # Ignore if same class
     @current_layout=target.new if target.superclass == Layout # create the new layout
+  end
+  
+  def world_exists?
+    return false
   end
   
   def quit #might add some cleanup code here later, so it is a method on its own

@@ -11,14 +11,14 @@ class Tileset < Gosu::Image
 end
 
 module Display
-  def self.blit(x, y, z, symbol=:fill100,color=0xFFFFFFFF) #faster than draw_rot
+  def self.blit(x, y, z=LAYER_BASE, symbol=:fill100,color=0xFFFFFFFF) #faster than draw_rot
     if (x >= 0 and x < SCREEN_TILE_WIDTH) and #don't draw out of bounds
       (y >= 0 and y < SCREEN_TILE_HEIGHT) then
       $game.tileset[symbol].draw(x*TILE_SIZE[0], y*TILE_SIZE[1], z, 1, 1, color)
     end
   end
   
-  def self.blit_rot(x, y, z, symbol=:fill100,color=0xFFFFFFFF,angle=0,scale=[1,1]) #slower than draw_tile
+  def self.blit_rot(x, y, z=LAYER_BASE, symbol=:fill100,color=0xFFFFFFFF,angle=0,scale=[1,1]) #slower than draw_tile
     if (x >= 0 and x < SCREEN_TILE_WIDTH) and #don't draw out of bounds
       (y >= 0 and y < SCREEN_TILE_HEIGHT) then
       $game.tileset[symbol].draw_rot(x*TILE_SIZE[0]+TILE_SIZE[0]*0.5, y*TILE_SIZE[1]+TILE_SIZE[1]*0.5, z, angle, 0.5, 0.5, scale[0],scale[1], color)
@@ -26,7 +26,7 @@ module Display
   end
     
     # horizontal or vertical line, quicker than blit_bresenham
-  def self.blit_line(x, y, length, z=0, color=0xFFFFFFFF, symbol=:fill, horizontal=true)
+  def self.blit_line(x, y, length, z=LAYER_BASE, color=0xFFFFFFFF, symbol=:fill, horizontal=true)
     if horizontal then a, b = 1, 0
     else a, b = 0, 1 end
     color.kind_of?(Gradient) ? (gradient=true) : (gradient=false)
@@ -38,7 +38,7 @@ module Display
   end
   
     # draw line using bresenham algorithm
-  def self.blit_bresenham(x0,y0,x1,y1, z=0, color=0xFFFFFFFF, symbol=:fill)
+  def self.blit_bresenham(x0,y0,x1,y1, z=LAYER_SPRITE, color=0xFFFFFFFF, symbol=:fill)
     list=bresenham_line(x0,y0,x1,y1)
     list.each do |point|
       $game.tileset[symbol].draw(point[:x]*TILE_SIZE[0], point[:y]*TILE_SIZE[1], z, 1, 1, color)

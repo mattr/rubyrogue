@@ -76,7 +76,6 @@ class Object
     end
     return points
   end
-
 end #end of Object
 
 class BitField #bitfield

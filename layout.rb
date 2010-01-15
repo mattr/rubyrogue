@@ -5,7 +5,7 @@ class Layout
   include Updatable
   include Drawable
   include Inputable
-  attr_accessor :state, :keys
+  attr_accessor :state, :keys, :current_button
   
   def initialize
     @state = :initialized
@@ -62,14 +62,26 @@ class Title < Layout
     @keys=[]
     $game.caption = "Title Layout Test"
     @state = :main #root level
+    # buttons
+    @b_newgame=Button.new(24,16,"New Game"){ puts "New game pressed"}
+    @b_test1=Button.new(24,17,"Test Layout"){ self.remove; $game.change_layout(Test)}
+    @b_test2=Button.new(24,18,"Test Button Toggle",true){@b_test2.text=(@b_test2.toggled?) ? "Toggled ON" : "Toggled OFF"}
+    @b_quit=Button.new(24,20,"Exit",false){$game.close}
+    @hotkeys = {:esc => @b_quit}
+    @b_newgame.disable
+    @b_newgame.prev = @b_quit; @b_newgame.next = @b_test1
+    @b_test1.prev = @b_newgame; @b_test1.next = @b_test2
+    @b_test2.prev = @b_test1; @b_test2.next = @b_quit
+    @b_quit.prev = @b_test2; @b_quit.next = @b_newgame
+    @current_button=@b_test1; @b_test1.select
+    
   end
   
   def update
-    $game.quit if Keys.triggered?(self, :esc) and @state == :main
-    begin 
-      self.remove 
-      $game.change_layout(Test)
-    end if Keys.triggered?(self, :enter)
+    @hotkeys.each {|key,value| value.action if Keys.triggered?(self,key)}
+    @current_button=@current_button.next_button if Keys.ready?(self,:down)
+    @current_button=@current_button.prev_button if Keys.ready?(self,:up)
+    @current_button.action if Keys.triggered?(self, :enter)
   end
   
   def draw
@@ -77,11 +89,15 @@ class Title < Layout
       Display.blit_rot(5+i*4,3,0,GAME_TITLE[i].intern,0xFFFF0000,0,[4,4])
     end
     Display.blit_text(1,SCREEN_TILE_HEIGHT-2,1,"Hit ESC to exit, ENTER to test layout change",0xFFAAAAAA) if @state == :main
-    Display.blit_text(0,0,1,$game.timedelta.to_s,0xFFFFFFFF)
     Display.blit_line(0,0,SCREEN_TILE_WIDTH,0,0xFFAAAAAA,:fill100)
     Display.blit_line(0,SCREEN_TILE_HEIGHT-1,SCREEN_TILE_WIDTH,0,0xFFAAAAAA,:fill100)
     Display.blit_line(0,1,SCREEN_TILE_HEIGHT-2,0,0xFFAAAAAA,:fill100,false)
     Display.blit_line(SCREEN_TILE_WIDTH-1,1,SCREEN_TILE_HEIGHT-2,0,0xFFAAAAAA,:fill100,false)
+    Display.blit_text(SCREEN_TILE_WIDTH-8,SCREEN_TILE_HEIGHT-1,2,VERSION,0xFF444444)
   end
   
+  def remove
+    super
+    Handler.destroy(@b_newgame,@b_test1,@b_test2,@b_quit)
+  end  
 end

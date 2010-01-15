@@ -1,5 +1,6 @@
 # Identity constants
   GAME_TITLE = "Ruby Roguelike"
+  VERSION = "alpha.1"
 
 # Time constants
   DAYS_PER_YEAR = 360
@@ -159,6 +160,19 @@ BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
     0.99 => 0xFFFFFFFF,
     1 => 0xFFFFFFFF
     })
+  # button colors
+  BUTTON_HIGHLIGHTED = 0xFF00FFFF
+  BUTTON_DEFAULT = 0xFFCCCCCC
+  BUTTON_DISABLED = 0xFF444444
+  BUTTON_TOGGLE_ON = 0xFF008800
+  BUTTON_TOGGLE_OFF = 0xFF880000
+  BUTTON_TOGGLE_ON_HIGHLIGHTED = 0xFF00FF00
+  BUTTON_TOGGLE_OFF_HIGHLIGHTED = 0xFFFF0000
+  LAYER_BOTTOM = 0
+  LAYER_BASE = 1
+  LAYER_SPRITE = 2
+  LAYER_TEXT = 3
+  LAYER_TOP = 4
 
 # Tileset constants
   SYMBOLS = [

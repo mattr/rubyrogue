@@ -1,4 +1,4 @@
-#various GUI bits, DEPRECATED
+#various GUI elements
 
 class Text #draw text. Text.new(x,y,string,color)
   attr_accessor :state, :content, :x, :y, :color
@@ -11,7 +11,7 @@ class Text #draw text. Text.new(x,y,string,color)
   def draw
     if @state==:enabled then
       @content.length.times do |i|
-        Display.blit(@x+i,@y,1,@content[i].intern,color)
+        Display.blit(@x+i,@y,LAYER_TEXT,@content[i].intern,color)
       end
     end
   end
@@ -103,54 +103,104 @@ class TextInput #handle text input  TextInput.new(Text _instance)
   end
 end
 
-class Frame #simply draw a frame. Frame.new(x,y,width,height,z,color,symbol)
-  attr_accessor :state, :x, :y, :width, :height, :z, :color, :type, :tileset
+class Button # a simple button. Button.new(x,y,'text' or :symbol) {action}
   include Drawable
-  def initialize(x, y, width, height, z=0, color=0xFFFFFFFF, type=:single)
-    @x, @y, @z, @width, @height, @color, @type, @tiles = x, y, z, width, height, color, type, FRAME_SINGLE
+  attr_accessor :x, :y, :text, :action, :next, :prev
+  
+  def initialize(x, y, text, toggle=false, &block)
+    @focus = false
+    @enabled = true
+    @action = block
+    @x,@y, @text= x, y, text
+    @content_type = (@text.class==Symbol) ? :symbol : :text
+    @toggle_button = toggle
+    @toggled = false
+    @next = nil
+    @prev = nil
   end
   
-  def draw
-      if type==:double then
-        @tiles=FRAME_DOUBLE
-      elsif type==:single then
-        @tiles=FRAME_SINGLE
+  def selected?
+    return @focus
+  end
+  
+  def select
+    @focus = true
+  end
+  
+  def unselect
+    @focus = false
+  end
+  
+  def toggled?
+    return @toggled
+  end
+  
+  def enabled?
+    return @enabled
+  end
+    
+  def enable
+    @enabled = true
+  end
+  
+  def disable
+    @enabled = false
+  end
+  
+  def action
+    if @enabled then
+      if @toggle_button then
+        @toggled = @toggled ? false : true
+        return @action.call
       else
-        @tiles=[@type]*6
+        return @action.call
       end
-      Display.blit(@x,          @y,           @z, @tiles[0], @color) #topleft corner
-      Display.blit(@x+@width-1, @y,           @z, @tiles[1], @color) #topright corner
-      Display.blit(@x+@width-1, @y+@height-1, @z, @tiles[2], @color) #bottomright corner
-      Display.blit(@x,          @y+@height-1, @z, @tiles[3], @color) #bottomleft corner
-      
-      (@width-2).times do |i|
-        Display.blit(@x+i+1,        @y,           @z, @tiles[4],  @color) if @width>2 #horizontal wall (upper)
-        Display.blit(@x+i+1,        @y+@height-1, @z, @tiles[4],  @color) if @width>2 #horizontal wall (lower)
-      end
-      (@height-2).times do |j|
-        Display.blit(@x,          @y+j+1,         @z, @tiles[5], @color) if @height>2 #vertical wall (left)
-        Display.blit(@x+@width-1, @y+j+1,         @z, @tiles[5], @color) if @height>2 #vertical wall (right)
-      end
+    end
   end
   
-  def remove
-    Drawable::remove(self)
+  def next_button
+    if @next then
+      @focus = false
+      if @next.enabled? then
+        @next.select
+        return @next
+      else
+        @next.next_button
+      end
+    end
   end
-end
-
-class View # draw map (world, region, local) - Viewport.new(x,y,width,height,map,offset_x,offset_y,tilable_x,tilable_y)
-  include Drawable
-  attr_accessor :x, :y, :width, :height, :offset_x, :offset_y
   
-  def initialize(x,y,width,height,map,offset_x=0,offset_y=0,tilable_x=false,tilable_y=false)
-    @x,@y,@width,@height,@map,@offset_x,@offset_y,@tile_x,@tile_y=x,y,width,height,map,offset_x,offset_y,tilable_x,tilable_y
+  def prev_button
+    if @prev then
+      @focus = false
+      if @prev.enabled? then
+        @prev.select
+        return @prev
+      else
+        @prev.prev_button
+      end
+    end
   end
   
   def draw
-    Display.blit_map(@x,@y,@width,@height,@map,@offset_x,@offset_y,@tile_x,@tile_y)
+    if @enabled then
+      if @toggle_button then
+        color = @focus ? (@toggled ? BUTTON_TOGGLE_ON_HIGHLIGHTED : BUTTON_TOGGLE_OFF_HIGHLIGHTED) : (@toggled ? BUTTON_TOGGLE_ON : BUTTON_TOGGLE_OFF)
+      else
+        color = @focus ? BUTTON_HIGHLIGHTED : BUTTON_DEFAULT 
+      end
+    else
+      color = BUTTON_DISABLED
+    end
+    
+    if @content_type == :text then
+      Display.blit_text(@x,@y,LAYER_TEXT,@text, color)
+    else
+      Display.blit(@x,@y,LAYER_TEXT,@text, color)
+    end
   end
   
   def remove
     Drawable::remove(self)
-  end
+  end  
 end
