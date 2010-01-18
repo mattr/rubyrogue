@@ -76,6 +76,7 @@ class Object
     end
     return points
   end
+  
 end #end of Object
 
 class BitField #bitfield
@@ -152,7 +153,7 @@ end
 
 # Shadowcasting FoV algirithm, include in map class and use do_fov
 # needs the following methods provided: blocked?(x,y) for obstacles and light(x,y) to set the light at coords
-module ShadowcastingFieldOfView
+module ShadowcastingFOV
     # Multipliers for transforming coordinates into other octants
     @@mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],

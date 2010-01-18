@@ -22,6 +22,9 @@ SCREEN_TILE_HEIGHT = SCREEN_SIZE[1] / TILE_SIZE[1]
 # Tileset - the file must be in ./images/ folder
 FILE_TILESET = "Cooz_16x16.png"
 
+# Input delay in milliseconds
+DELAY = 200
+
 # World parameters
 WORLD_SEED=0
 WORLD_SIZE=[32,32]

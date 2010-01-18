@@ -26,7 +26,7 @@ module Display
   end
     
     # horizontal or vertical line, quicker than blit_bresenham
-  def self.blit_line(x, y, length, z=LAYER_BASE, color=0xFFFFFFFF, symbol=:fill, horizontal=true)
+  def self.blit_line(x, y, length, z=LAYER_BASE, symbol=:fill, color=0xFFFFFFFF, horizontal=true)
     if horizontal then a, b = 1, 0
     else a, b = 0, 1 end
     color.kind_of?(Gradient) ? (gradient=true) : (gradient=false)

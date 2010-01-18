@@ -20,18 +20,18 @@ class MainWindow < Gosu::Window
   end
   
   def draw
-    start=Gosu::milliseconds
+    start = Gosu::milliseconds()
     Drawable.do!
     
     ######### Test code begin
     
     ######### Test code end
     
-    @draw_time=Gosu::milliseconds-start
+    @draw_time = Gosu::milliseconds() - start
   end
   
   def update
-    start=Gosu::milliseconds()
+    start = Gosu::milliseconds()
     Inputable::input=Input::read_keys(self) #comes before Inputable.do!
     Inputable.do! # comes before Updatable.do!
     @keys=Inputable::input
@@ -42,16 +42,14 @@ class MainWindow < Gosu::Window
     
 
     ######## Test code ends here
-    @timedelta=@draw_time+Gosu::milliseconds()-start #benchmark end
+    @update_time = Gosu::milliseconds() - start #benchmark end
+    @timedelta=@draw_time + @update_time
+
   end
   
   def change_layout(target)
     if target == @current_layout.class then return nil end # Ignore if same class
     @current_layout=target.new if target.superclass == Layout # create the new layout
-  end
-  
-  def world_exists?
-    return false
   end
   
   def quit #might add some cleanup code here later, so it is a method on its own

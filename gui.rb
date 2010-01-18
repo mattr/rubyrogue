@@ -1,17 +1,17 @@
 #various GUI elements
 
 class Text #draw text. Text.new(x,y,string,color)
-  attr_accessor :state, :content, :x, :y, :color
+  attr_accessor :state, :text, :x, :y, :color
   include Drawable
-  def initialize(x, y, content='', color=0xFFFFFFFF)
-    @content, @x, @y, @color, @state = content, x, y, color, :enabled
+  def initialize(x, y, text='', color=0xFFFFFFFF)
+    @text, @x, @y, @color, @state = text, x, y, color, :enabled
     yield if block_given?
   end
     
   def draw
     if @state==:enabled then
-      @content.length.times do |i|
-        Display.blit(@x+i,@y,LAYER_TEXT,@content[i].intern,color)
+      @text.length.times do |i|
+        Display.blit(@x+i,@y,LAYER_TEXT,@text[i].intern,color)
       end
     end
   end
@@ -103,20 +103,18 @@ class TextInput #handle text input  TextInput.new(Text _instance)
   end
 end
 
-class Button # a simple button. Button.new(x,y,'text' or :symbol) {action}
+class Button # a simple button. Button.new(x,y,'text') {action}
   include Drawable
   attr_accessor :x, :y, :text, :action, :next, :prev
   
-  def initialize(x, y, text, toggle=false, &block)
+  def initialize(x, y, text, toggle=false, prev_button=nil, next_button=nil, &block)
     @focus = false
     @enabled = true
     @action = block
     @x,@y, @text= x, y, text
-    @content_type = (@text.class==Symbol) ? :symbol : :text
     @toggle_button = toggle
+    @next, @prev = next_button,prev_button
     @toggled = false
-    @next = nil
-    @prev = nil
   end
   
   def selected?
@@ -158,46 +156,17 @@ class Button # a simple button. Button.new(x,y,'text' or :symbol) {action}
     end
   end
   
-  def next_button
-    if @next then
-      @focus = false
-      if @next.enabled? then
-        @next.select
-        return @next
-      else
-        @next.next_button
-      end
-    end
-  end
-  
-  def prev_button
-    if @prev then
-      @focus = false
-      if @prev.enabled? then
-        @prev.select
-        return @prev
-      else
-        @prev.prev_button
-      end
-    end
-  end
-  
   def draw
     if @enabled then
       if @toggle_button then
-        color = @focus ? (@toggled ? BUTTON_TOGGLE_ON_HIGHLIGHTED : BUTTON_TOGGLE_OFF_HIGHLIGHTED) : (@toggled ? BUTTON_TOGGLE_ON : BUTTON_TOGGLE_OFF)
+        color = @focus ? (@toggled ? BUTTON_TOGGLE_ON_HIGHLIGHTED.color(Gosu::milliseconds()*0.02%10,10) : BUTTON_TOGGLE_OFF_HIGHLIGHTED.color(Gosu::milliseconds()*0.02%10,10)) : (@toggled ? BUTTON_TOGGLE_ON : BUTTON_TOGGLE_OFF)
       else
-        color = @focus ? BUTTON_HIGHLIGHTED : BUTTON_DEFAULT 
+        color = @focus ? BUTTON_HIGHLIGHTED.color(Gosu::milliseconds()*0.02%10,10) : BUTTON_DEFAULT 
       end
     else
       color = BUTTON_DISABLED
     end
-    
-    if @content_type == :text then
-      Display.blit_text(@x,@y,LAYER_TEXT,@text, color)
-    else
-      Display.blit(@x,@y,LAYER_TEXT,@text, color)
-    end
+    Display.blit_text(@x,@y,LAYER_TEXT,@text, color)
   end
   
   def remove

@@ -58,7 +58,6 @@ BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
   ]
   
 # Input constants
-  DELAY = 150 # milliseconds
   ALL_KEYS = {
     :'0' => [Gosu::Kb0, Gosu::KbNumpad0],
     :'1' => [Gosu::Kb1, Gosu::KbNumpad1],
@@ -161,13 +160,13 @@ BIOMES = [ # elevation scalar [0,1], rainfall and drainage integer [0..100]
     1 => 0xFFFFFFFF
     })
   # button colors
-  BUTTON_HIGHLIGHTED = 0xFF00FFFF
+  BUTTON_HIGHLIGHTED = Gradient.new([0xFF008888,0xFF00FFFF,0xFF008888])
   BUTTON_DEFAULT = 0xFFCCCCCC
   BUTTON_DISABLED = 0xFF444444
   BUTTON_TOGGLE_ON = 0xFF008800
   BUTTON_TOGGLE_OFF = 0xFF880000
-  BUTTON_TOGGLE_ON_HIGHLIGHTED = 0xFF00FF00
-  BUTTON_TOGGLE_OFF_HIGHLIGHTED = 0xFFFF0000
+  BUTTON_TOGGLE_ON_HIGHLIGHTED = Gradient.new([0xFF008800,0xFF00FF00,0xFF008800])
+  BUTTON_TOGGLE_OFF_HIGHLIGHTED = Gradient.new([0xFF880000,0xFFFF0000,0xFF880000])
   LAYER_BOTTOM = 0
   LAYER_BASE = 1
   LAYER_SPRITE = 2
